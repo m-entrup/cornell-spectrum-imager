@@ -1,12 +1,16 @@
 package edu.cornell.csi;
 
+import ij.IJ;
+import ij.ImagePlus;
+import ij.ImageStack;
+import ij.WindowManager;
+import ij.gui.GenericDialog;
+import ij.gui.Roi;
+import ij.measure.Calibration;
+import ij.measure.Measurements;
 import ij.plugin.PlugIn;
-import ij.*;
-import ij.gui.*;
-import ij.process.*;
-import ij.measure.*;
-import ij.util.Tools;
-import java.awt.*;
+import ij.process.ImageProcessor;
+import ij.process.ImageStatistics;
 
 /*
  * CSI_Darkref_Subtractor is a plugin for ImageJ to subtract dark reference spectrum.
@@ -46,9 +50,10 @@ public class CSI_Darkref_Subtractor implements PlugIn {
     private ImagePlus imp;
     private ImagePlus drimp;
 
-    public void run(String arg) {
+    @Override
+    public void run(final String arg) {
 	imp = WindowManager.getCurrentImage();
-	ImagePlus impsubbed = chooseSpectra();
+	final ImagePlus impsubbed = chooseSpectra();
 	if (impsubbed == null)
 	    return;
 	impsubbed.updateChannelAndDraw();
@@ -57,22 +62,22 @@ public class CSI_Darkref_Subtractor implements PlugIn {
     }
 
     public ImagePlus chooseSpectra() {
-	int[] winIDs = WindowManager.getIDList();
+	final int[] winIDs = WindowManager.getIDList();
 	if (winIDs == null) {
 	    IJ.error("No spectra are open.");
 	    return null;
 	}
 
-	String[] winNames = new String[winIDs.length];
+	final String[] winNames = new String[winIDs.length];
 	for (int i = 0; i < winIDs.length; i++) {
-	    ImagePlus impi = WindowManager.getImage(winIDs[i]);
+	    final ImagePlus impi = WindowManager.getImage(winIDs[i]);
 	    if (impi != null)
 		winNames[i] = impi.getTitle();
 	    else
 		winNames[i] = "";
 	}
 
-	GenericDialog gd = new GenericDialog("Subtract Dark Reference");
+	final GenericDialog gd = new GenericDialog("Subtract Dark Reference");
 	gd.addChoice("Spectrum:", winNames, winNames[0]);
 	gd.addChoice("Dark Reference:", winNames, winNames[0]);
 	gd.showDialog();
@@ -86,10 +91,10 @@ public class CSI_Darkref_Subtractor implements PlugIn {
     }
 
     public ImagePlus subtractDR() {
-	double[] dr = getDR();
-	int width = imp.getWidth();
-	int height = imp.getHeight();
-	int size = imp.getStackSize();
+	final double[] dr = getDR();
+	final int width = imp.getWidth();
+	final int height = imp.getHeight();
+	final int size = imp.getStackSize();
 	Roi roi = drimp.getRoi();
 	if (roi == null) {
 	    drimp.setRoi(0, 0, width, height);
@@ -101,36 +106,36 @@ public class CSI_Darkref_Subtractor implements PlugIn {
 	    if (width != dr.length)
 		IJ.error("Different number of spectra.");
 
-	    ImageProcessor ip = imp.getProcessor().duplicate();
+	    final ImageProcessor ip = imp.getProcessor().duplicate();
 	    for (int i = 0; i < width; i++)
 		for (int j = 0; j < height; j++)
 		    ip.putPixelValue(i, j, ip.getf(i, j) - dr[i]);
 	    return new ImagePlus("darkref_" + imp.getTitle(), ip);
-	} else {
-	    if (size != dr.length)
-		IJ.error("Different number of spectra.");
-
-	    ImageStack stack = imp.getStack();
-	    ImageStack stacksub = new ImageStack(width, height);
-	    ImageProcessor ip;
-	    for (int k = 0; k < size; k++) {
-		ip = stack.getProcessor(k + 1).duplicate();
-		ip.setRoi(roi);
-		for (int i = 0; i < width; i++)
-		    for (int j = 0; j < height; j++)
-			ip.putPixelValue(i, j, ip.getf(i, j) - dr[k]);
-		stacksub.addSlice(stack.getSliceLabel(k + 1), ip);
-	    }
-	    ImagePlus subbed = new ImagePlus("darkref_" + imp.getTitle(), stacksub);
-	    subbed.setCalibration(imp.getCalibration());
-	    return subbed;
 	}
+	if (size != dr.length)
+	    IJ.error("Different number of spectra.");
+
+	final ImageStack stack = imp.getStack();
+	final ImageStack stacksub = new ImageStack(width, height);
+	ImageProcessor ip;
+	for (int k = 0; k < size; k++) {
+	    ip = stack.getProcessor(k + 1).duplicate();
+	    ip.setRoi(roi);
+	    for (int i = 0; i < width; i++)
+		for (int j = 0; j < height; j++)
+		    ip.putPixelValue(i, j, ip.getf(i, j) - dr[k]);
+	    stacksub.addSlice(stack.getSliceLabel(k + 1), ip);
+	}
+	final ImagePlus subbed = new ImagePlus("darkref_" + imp.getTitle(), stacksub);
+	subbed.setCalibration(imp.getCalibration());
+	return subbed;
+
     }
 
     public double[] getDR() {
-	int width = drimp.getWidth();
-	int height = drimp.getHeight();
-	int size = drimp.getStackSize();
+	final int width = drimp.getWidth();
+	final int height = drimp.getHeight();
+	final int size = drimp.getStackSize();
 	Roi roi = drimp.getRoi();
 	if (roi == null) {
 	    drimp.setRoi(0, 0, width, height);
@@ -138,10 +143,10 @@ public class CSI_Darkref_Subtractor implements PlugIn {
 	}
 
 	if (size < 2) {
-	    int ystart = (int) roi.getBounds().getY();
-	    int yend = ystart + (int) roi.getBounds().getHeight();
-	    double[] values = new double[width];
-	    ImageProcessor ip = drimp.getProcessor();
+	    final int ystart = (int) roi.getBounds().getY();
+	    final int yend = ystart + (int) roi.getBounds().getHeight();
+	    final double[] values = new double[width];
+	    final ImageProcessor ip = drimp.getProcessor();
 
 	    for (int i = 0; i < width; i++) {
 		values[i] = 0;
@@ -151,20 +156,20 @@ public class CSI_Darkref_Subtractor implements PlugIn {
 		values[i] /= (yend - ystart);
 	    }
 	    return values;
-	} else {
-	    ImageStack stack = drimp.getStack();
-	    double[] values = new double[size];
-	    Calibration cal = drimp.getCalibration();
-	    ImageProcessor ip;
-	    ImageStatistics stats;
-	    for (int k = 0; k < size; k++) {
-		ip = stack.getProcessor(k + 1);
-		ip.setRoi(roi);
-		stats = ImageStatistics.getStatistics(ip, Measurements.MEAN, cal);
-		values[k] = (double) stats.mean;
-	    }
-	    return values;
 	}
+	final ImageStack stack = drimp.getStack();
+	final double[] values = new double[size];
+	final Calibration cal = drimp.getCalibration();
+	ImageProcessor ip;
+	ImageStatistics stats;
+	for (int k = 0; k < size; k++) {
+	    ip = stack.getProcessor(k + 1);
+	    ip.setRoi(roi);
+	    stats = ImageStatistics.getStatistics(ip, Measurements.MEAN, cal);
+	    values[k] = stats.mean;
+	}
+	return values;
+
     }
 
 }

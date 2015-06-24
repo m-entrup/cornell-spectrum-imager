@@ -1,15 +1,22 @@
 package edu.cornell.csi;
 
-import java.io.*;
-import java.util.*; // for the Vector and Hashtable classes
-import java.awt.*;
-import java.awt.event.*;
-import ij.*;
-import ij.plugin.*;
-import ij.process.*;
-import ij.io.*;
-import ij.measure.*;
-import ij.gui.*;
+import ij.IJ;
+import ij.ImageJ;
+import ij.ImagePlus;
+import ij.ImageStack;
+import ij.io.FileInfo;
+import ij.io.FileOpener;
+import ij.io.OpenDialog;
+import ij.measure.Calibration;
+import ij.plugin.PlugIn;
+import ij.process.ImageProcessor;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Vector; // for the Vector and Hashtable classes
 //import ij.IJ.*;
 
 // ------------------------------------------
@@ -200,15 +207,15 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 
     private int curGroupLevel = -1; // Track how deep is the group we are currently reading
     private static final int MAXDEPTH = 64; // Maximum number of levels of tags
-    private int[] curGroupAtLevelX = new int[MAXDEPTH]; // To track group at current level
-    private String[] curGroupNameAtLevelX = new String[MAXDEPTH]; // To track group name at current level
+    private final int[] curGroupAtLevelX = new int[MAXDEPTH]; // To track group at current level
+    private final String[] curGroupNameAtLevelX = new String[MAXDEPTH]; // To track group name at current level
 
-    private int[] curTagAtLevelX = new int[MAXDEPTH]; // To track tag number at current level
+    private final int[] curTagAtLevelX = new int[MAXDEPTH]; // To track tag number at current level
     private String curTagName = ""; // the name of the current tag data item
 
     // Will use these to store tags
-    private Vector storedTags = new Vector();
-    private Hashtable tagHash = new Hashtable();
+    private final Vector<String> storedTags = new Vector<String>();
+    private final Hashtable<String, Object> tagHash = new Hashtable<String, Object>();
 
     // Set up constants for the different encoded data types used in DM3 files
     private static final int SHORT = 2;
@@ -226,36 +233,33 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 
     // This the lhs of Image list tags
     private static final String IMGLIST = "root.ImageList.";
-    // This is the lhs for Document Object List Tags
-    // root.DocumentObjectList.0.AnnotationGroupList.0.AnnotationType = 31
-    private static final String OBJLIST = "root.DocumentObjectList.";
+    ImagePlus img1;
 
-    ImagePlus img;
-
-    public void run(String arg) {
+    @Override
+    public void run(final String arg) {
 	String directory = "";
 	String fileName = arg;
 
 	if (debugLevel > 5)
-	    IJ.write("IN:dir = " + directory + ", file=" + fileName);
+	    IJ.log("IN:dir = " + directory + ", file=" + fileName);
 	if ((arg == null) || (arg.equals(""))) { // Choose a file since none specified
-	    OpenDialog od = new OpenDialog("Load DM3 File...", arg);
+	    final OpenDialog od = new OpenDialog("Load DM3 File...", arg);
 	    fileName = od.getFileName();
 	    if (fileName == null)
 		return;
 	    directory = od.getDirectory();
 	    if (debugLevel > 5)
-		IJ.write("IF:dir = " + directory + ", file=" + fileName);
+		IJ.log("IF:dir = " + directory + ", file=" + fileName);
 	} else { // we were sent a filename to open
-	    File dest = new File(arg);
+	    final File dest = new File(arg);
 	    directory = dest.getParent();
 	    fileName = dest.getName();
 	    if (debugLevel > 5)
-		IJ.write("ELSE:dir = " + directory + ", file=" + fileName);
+		IJ.log("ELSE:dir = " + directory + ", file=" + fileName);
 	}
 
 	// Load in the image
-	ImagePlus imp = load(directory, fileName);
+	final ImagePlus imp = load(directory, fileName);
 	if (imp == null)
 	    return;
 	imp.resetDisplayRange();
@@ -279,14 +283,14 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	// Show the image stack
 	imp.show();
 	imp.resetDisplayRange();
-	img = imp;
+	img1 = imp;
 
 	// if (imp.getHeight() < 2)
 	// EELS.Spectrum_Analyzer.run(imp);
     }
 
-    public ImagePlus load(String directory, String fileName) /* throws IOException */{
-
+    public ImagePlus load(final String dir, final String fileName) /* throws IOException */{
+	String directory = dir;
 	if ((fileName == null) || (fileName == ""))
 	    return null;
 
@@ -301,7 +305,7 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	// Try calling the parse routine
 	try {
 	    parseDM3(directory, fileName);
-	} catch (Exception e) {
+	} catch (final Exception e) {
 	    IJ.showStatus("parseDM3() error");
 	    IJ.showMessage("DM3_Reader", "" + e);
 	    return null;
@@ -315,7 +319,7 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	    fi = getDM3FileInfo(directory, fileName);
 	}
 	// This is in case of trouble parsing the tag table
-	catch (Exception e) {
+	catch (final Exception e) {
 	    IJ.showStatus("");
 	    IJ.showMessage("DM3_Reader", "gDM3:" + e);
 	    return null;
@@ -323,22 +327,22 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 
 	// Write out Calculated Offset if reqd
 	if (debugLevel > 1)
-	    IJ.write("Calculated offset = " + fi.offset);
+	    IJ.log("Calculated offset = " + fi.offset);
 	if (debugLevel > 1)
-	    IJ.write("Chosen image = " + chosenImage);
+	    IJ.log("Chosen image = " + chosenImage);
 
 	// Open the image!
-	FileOpener fo = new FileOpener(fi);
-	ImagePlus imp = fo.open(false);
-	// if(debugLevel>5) if(imp==null) IJ.write("Image load failed!");
+	final FileOpener fo = new FileOpener(fi);
+	final ImagePlus imp = fo.open(false);
+	// if(debugLevel>5) if(imp==null) IJ.log("Image load failed!");
 
 	// Write out the contents of the storedTags list
 	// and set the value of notes
-	StringBuffer notesBuffer = new StringBuffer();
+	final StringBuffer notesBuffer = new StringBuffer();
 	for (int i = 0; i < storedTags.size(); i++) {
 	    // Can decide whether I want to do this
 	    // IJ.log((String) storedTags.elementAt(i));
-	    notesBuffer.append((String) storedTags.elementAt(i) + "\n");
+	    notesBuffer.append(storedTags.elementAt(i) + "\n");
 	}
 	notes = notesBuffer.toString();
 	if (!notes.equals(""))
@@ -349,23 +353,24 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	// already (such as a brightness calibration)
 	try {
 	    imp.setCalibration(getDM3CalibrationInfo(imp.getCalibration()));
-	} catch (Exception e) {
+	} catch (final Exception e) {
 	    IJ.showStatus("No Calibration info in " + fileName);
 	}
 	// Hovden - Sep 06 2010
 	// Set stack
 	try {
-	    ImageStack ims = imp.getStack();
+	    final ImageStack ims = imp.getStack();
 	    for (int i = 0; i < ims.getSize(); i++)
 		ims.setSliceLabel(
 			String.format("%.1f " + imp.getCalibration().getZUnit(), (i - imp.getCalibration().zOrigin)
 				* imp.getCalibration().pixelDepth), i + 1);
-	} catch (Exception e) {
+	} catch (final Exception e) {
 	    IJ.showStatus("Error Loading Image Stack");
 	}
 	// If this is a diffraction (ie reciprocal space) image then set the
 	// FHT property so that ImageJ displays inverse scale
-	String imagingMode = (String) tagHash.get(IMGLIST + chosenImage + ".ImageTags.Microscope Info.Imaging Mode");
+	final String imagingMode = (String) tagHash.get(IMGLIST + chosenImage
+		+ ".ImageTags.Microscope Info.Imaging Mode");
 	if (imagingMode != null && imagingMode.toUpperCase().equals("DIFFRACTION")) {
 	    imp.setProperty("FHT", "Dummy FHT");
 	}
@@ -380,8 +385,8 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	    // Iterate over components of the taglist
 	    // looking for the image brightness tag
 	    // all this because I don't know how to partially match a hash key
-	    for (Enumeration e = tagHash.keys(); e.hasMoreElements();) {
-		String thisElementString = (String) e.nextElement();
+	    for (final Enumeration<String> e = tagHash.keys(); e.hasMoreElements();) {
+		final String thisElementString = e.nextElement();
 
 		if ((thisElementString).endsWith("ImageDisplayInfo.HighLimit"))
 		    hiVal = ((Float) tagHash.get(thisElementString)).doubleValue();
@@ -392,18 +397,18 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	    // If we found at least one, then set the min max brightness
 	    if (hiVal != 0.0 || loVal != 0.0) {
 		// min,max are set through the image processor, so get it
-		ImageProcessor ip = imp.getProcessor();
+		final ImageProcessor ip1 = imp.getProcessor();
 		// set them - nb setMinMax expects raw pixel values
 		// if a brightness calibration is in force then getRawValue()
 		// does the appropriate conversion
-		ip.setMinAndMax(imp.getCalibration().getRawValue(loVal), imp.getCalibration().getRawValue(hiVal));
+		ip1.setMinAndMax(imp.getCalibration().getRawValue(loVal), imp.getCalibration().getRawValue(hiVal));
 	    }
 	}
 
 	return imp;
     }
 
-    void parseDM3(String directory, String fileName) throws IOException {
+    void parseDM3(final String directory, final String fileName) throws IOException {
 	// This reads through the DM3 file, extracting useful tags
 	// which allow one to determine the data offset etc.
 
@@ -413,25 +418,25 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	// reading of specific types
 	f = new RandomAccessFile(directory + fileName, "r");
 	if (debugLevel > 0)
-	    IJ.write("Directory = " + directory);
+	    IJ.log("Directory = " + directory);
 	if (debugLevel > 0)
-	    IJ.write("File = " + fileName);
+	    IJ.log("File = " + fileName);
 
 	// Get the first 3 4byte ints from Header to find out
 	// FileVersion (which must be 3)
-	int fileVersion = f.readInt();
+	final int fileVersion = f.readInt();
 	if (fileVersion != 3)
 	    throw new IOException("This does not seem to be a DM3 file");
 
 	if (debugLevel > 5)
-	    IJ.write("File Version" + fileVersion);
+	    IJ.log("File Version" + fileVersion);
 
-	// ... file size
-	int FileSize = f.readInt();
-	int lE = f.readInt();
+	@SuppressWarnings("unused")
+	final int FileSize = f.readInt();
+	final int lE = f.readInt();
 
 	if (debugLevel > 5)
-	    IJ.write("lE " + lE);
+	    IJ.log("lE " + lE);
 
 	// ... and whether it was written in little endian (PC) format or not
 	// (Mac and Java output are big endian)
@@ -455,18 +460,18 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	f.close();
     }
 
-    FileInfo getDM3FileInfo(String directory, String fileName) throws IOException {
+    FileInfo getDM3FileInfo(final String directory, final String fileName) throws IOException {
 	// this gets the basic file information using the contents of the tag
 	// tables created by parseDM3()
 
 	// Set the basic file information
-	FileInfo fi = new FileInfo();
-	fi.fileFormat = fi.RAW;
-	fi.fileName = fileName;
-	fi.directory = directory;
+	final FileInfo fi1 = new FileInfo();
+	fi1.fileFormat = FileInfo.RAW;
+	fi1.fileName = fileName;
+	fi1.directory = directory;
 	// Originally forgot to do this - tells ImageJ what endian form the actual
 	// image data is in
-	fi.intelByteOrder = littleEndian;
+	fi1.intelByteOrder = littleEndian;
 
 	chosenImage = 0;
 	// Look for largest Image and assume that is the one we want
@@ -476,26 +481,26 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	// Iterate over images keeping a note of the largest image so far
 	while (true) {
 	    // The specific part of the key we are looking for
-	    String rString = ".ImageData.Data.Size";
-	    String tString = ".ImageData.DataType";
+	    final String rString = ".ImageData.Data.Size";
+	    final String tString = ".ImageData.DataType";
 	    if (debugLevel > 1)
-		IJ.write("Looking for:" + IMGLIST + i + rString);
+		IJ.log("Looking for:" + IMGLIST + i + rString);
 	    if (debugLevel > 1)
-		IJ.write("Looking for:" + IMGLIST + i + tString);
+		IJ.log("Looking for:" + IMGLIST + i + tString);
 
 	    // Can we find information for image i
 	    if (tagHash.containsKey(IMGLIST + i + rString)) {
 		if (debugLevel > 1)
-		    IJ.write("Found:" + IMGLIST + i + rString);
+		    IJ.log("Found:" + IMGLIST + i + rString);
 		if (debugLevel > 1)
-		    IJ.write("Found:" + IMGLIST + i + tString);
+		    IJ.log("Found:" + IMGLIST + i + tString);
 		// how big is this image?
-		long dataSize = ((Long) tagHash.get(IMGLIST + i + rString)).longValue();
-		int dataType = ((Integer) tagHash.get(IMGLIST + i + tString)).intValue();
+		final long dataSize = ((Long) tagHash.get(IMGLIST + i + rString)).longValue();
+		final int dataType = ((Integer) tagHash.get(IMGLIST + i + tString)).intValue();
 		if (debugLevel > 1)
-		    IJ.write("Current Data Size " + dataSize);
+		    IJ.log("Current Data Size " + dataSize);
 		if (debugLevel > 1)
-		    IJ.write("Current Data Type " + dataType);
+		    IJ.log("Current Data Type " + dataType);
 
 		// Is it the largest so far?
 		if (tagHash.containsKey(IMGLIST + i + tString)) {
@@ -503,10 +508,10 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 			// Choose this image
 			largestDataSizeSoFar = dataSize;
 			if (debugLevel > 1)
-			    IJ.write("New Largest Data Size:" + largestDataSizeSoFar);
+			    IJ.log("New Largest Data Size:" + largestDataSizeSoFar);
 			chosenImage = i;
 			if (debugLevel > 1)
-			    IJ.write("New Chosen Image:" + chosenImage);
+			    IJ.log("New Chosen Image:" + chosenImage);
 		    }
 		}
 
@@ -525,25 +530,25 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	 * RGBA_UINT8_3_DATA, RGBA_UINT16_DATA, RGBA_FLOAT32_DATA, RGBA_FLOAT64_DATA, POINT2_SINT16_0_DATA,
 	 * POINT2_SINT16_1_DATA, POINT2_SINT32_0_DATA, POINT2_FLOAT32_0_DATA, RECT_SINT16_1_DATA, RECT_SINT32_1_DATA,
 	 * RECT_FLOAT32_1_DATA, RECT_FLOAT32_0_DATA, SIGNED_INT64_DATA, UNSIGNED_INT64_DATA, LAST_DATA };
-	 * 
+	 *
 	 * };
 	 */
 	// OK pick the DataType
-	int dataType = ((Integer) tagHash.get(IMGLIST + chosenImage + ".ImageData.DataType")).intValue();
+	final int dataType = ((Integer) tagHash.get(IMGLIST + chosenImage + ".ImageData.DataType")).intValue();
 
 	// I have made my best guess for types 1-14
 	// ie SIGNED_INT16_DATA to BINARY_DATA
 	// but I don't know how to implement the remainder
 	switch (dataType) {
 	case 1: // SIGNED_INT16_DATA
-	    fi.fileType = FileInfo.GRAY16_SIGNED;
+	    fi1.fileType = FileInfo.GRAY16_SIGNED;
 	    break;
 	case 10: // UNSIGNED_INT16_DATA
-	    fi.fileType = FileInfo.GRAY16_UNSIGNED;
+	    fi1.fileType = FileInfo.GRAY16_UNSIGNED;
 	    break;
 
 	case 2: // REAL4_DATA
-	    fi.fileType = FileInfo.GRAY32_FLOAT;
+	    fi1.fileType = FileInfo.GRAY32_FLOAT;
 	    break;
 
 	// case 9: // or SIGNED_INT8_DATA
@@ -551,28 +556,28 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	// these as unsigned, but in the end decided to remove for safety
 
 	case 6: // UNSIGNED_INT8_DATA
-	    fi.fileType = FileInfo.GRAY8;
+	    fi1.fileType = FileInfo.GRAY8;
 	    break;
 
 	case 7: // SIGNED_INT32_DATA
-	    fi.fileType = FileInfo.GRAY32_INT;
+	    fi1.fileType = FileInfo.GRAY32_INT;
 	    break;
 	case 11: // UNSIGNED_INT32_DATA
-	    fi.fileType = FileInfo.GRAY32_UNSIGNED;
+	    fi1.fileType = FileInfo.GRAY32_UNSIGNED;
 	    break;
 
 	case 8: // RGB_DATA
-	    fi.fileType = FileInfo.RGB;
+	    fi1.fileType = FileInfo.RGB;
 	    break;
 
 	case 14: // BINARY_DATA
-	    fi.fileType = FileInfo.BITMAP;
+	    fi1.fileType = FileInfo.BITMAP;
 	    break;
 	case 23: // RGBA_UINT8_3_DATA
 		 // NB it is uncertain if this data type corresponds exactly to ImageJ's ARGB
 		 // A definitely comes first but the RGB values could be scrambled
 		 // (since they were all equal on my test image)
-	    fi.fileType = FileInfo.ARGB;
+	    fi1.fileType = FileInfo.ARGB;
 	    break;
 
 	default:
@@ -582,26 +587,26 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 
 	// Get the dimensions of the image for the chosen image
 	// I'm assuming they are ordered width then height
-	fi.width = ((Integer) tagHash.get(IMGLIST + chosenImage + ".ImageData.Dimensions.0")).intValue();
+	fi1.width = ((Integer) tagHash.get(IMGLIST + chosenImage + ".ImageData.Dimensions.0")).intValue();
 	if (tagHash.get(IMGLIST + chosenImage + ".ImageData.Dimensions.1") != null) // Cueva - Nov 11, 2010
-	    fi.height = ((Integer) tagHash.get(IMGLIST + chosenImage + ".ImageData.Dimensions.1")).intValue();
+	    fi1.height = ((Integer) tagHash.get(IMGLIST + chosenImage + ".ImageData.Dimensions.1")).intValue();
 	else
-	    fi.height = 1;
+	    fi1.height = 1;
 	if (tagHash.get(IMGLIST + chosenImage + ".ImageData.Dimensions.2") != null) { // Cueva - Sept 9, 2010
-	    fi.nImages = ((Integer) tagHash.get(IMGLIST + chosenImage + ".ImageData.Dimensions.2")).intValue(); // Hovden
-														// -
-														// Sept
-														// 6,
-														// 2010
-	    fi.gapBetweenImages = 0; // Hovden - Sept 6, 2010
+	    fi1.nImages = ((Integer) tagHash.get(IMGLIST + chosenImage + ".ImageData.Dimensions.2")).intValue(); // Hovden
+														 // -
+														 // Sept
+														 // 6,
+														 // 2010
+	    fi1.gapBetweenImages = 0; // Hovden - Sept 6, 2010
 	}
 	// Get the offset of the Image Data for chosen image
-	fi.offset = ((Long) tagHash.get(IMGLIST + chosenImage + ".ImageData.Data.Offset")).intValue();
+	fi1.offset = ((Long) tagHash.get(IMGLIST + chosenImage + ".ImageData.Data.Offset")).intValue();
 
-	return fi;
+	return fi1;
     }
 
-    Calibration getDM3CalibrationInfo(Calibration cal) {
+    Calibration getDM3CalibrationInfo(final Calibration cal) {
 	// get the spatial calibration information
 	// could also do brightness
 	// (actually a calibration fn is applied by ImageJ according
@@ -611,8 +616,9 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	// if other units are likely
 	// also will µm get corrupted? may be necessary to do a unicode comparison
 	String unit = (String) tagHash.get(IMGLIST + chosenImage + ".ImageData.Calibrations.Dimension.0.Units");
-	String zUnit = (String) tagHash.get(IMGLIST + chosenImage + ".ImageData.Calibrations.Dimension.2.Units");
-	String valueUnit = (String) tagHash.get(IMGLIST + chosenImage + ".ImageData.Calibrations.Brightness.Units");
+	final String zUnit = (String) tagHash.get(IMGLIST + chosenImage + ".ImageData.Calibrations.Dimension.2.Units");
+	final String valueUnit = (String) tagHash.get(IMGLIST + chosenImage
+		+ ".ImageData.Calibrations.Brightness.Units");
 	if (unit == null)
 	    unit = "nm";
 
@@ -629,12 +635,12 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	cal.setZUnit(zUnit);
 	cal.setValueUnit(valueUnit);
 	if (debugLevel > 0)
-	    IJ.write("Calibration unit: " + unit);
+	    IJ.log("Calibration unit: " + unit);
 
 	cal.pixelWidth = ((Float) tagHash.get(IMGLIST + chosenImage + ".ImageData.Calibrations.Dimension.0.Scale"))
 		.doubleValue();
 	if (debugLevel > 0)
-	    IJ.write("pixelWidth: " + cal.pixelWidth);
+	    IJ.log("pixelWidth: " + cal.pixelWidth);
 	if (tagHash.containsKey(IMGLIST + chosenImage + ".ImageData.Calibrations.Dimension.1.Scale"))
 	    cal.pixelHeight = ((Float) tagHash.get(IMGLIST + chosenImage + ".ImageData.Calibrations.Dimension.1.Scale"))
 		    .doubleValue();
@@ -664,14 +670,16 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	curTagAtLevelX[curGroupLevel] = -1;
 
 	if (debugLevel > 5)
-	    IJ.write("rTG: Current Group Level: " + curGroupLevel);
+	    IJ.log("rTG: Current Group Level: " + curGroupLevel);
 
-	int isSorted = f.readByte();
-	int isOpen = f.readByte();
-	int nTags = f.readInt();
+	@SuppressWarnings("unused")
+	final int isSorted = f.readByte();
+	@SuppressWarnings("unused")
+	final int isOpen = f.readByte();
+	final int nTags = f.readInt();
 
 	if (debugLevel > 5)
-	    IJ.write("rTG: Iterating over the " + nTags + " tag entries in this group");
+	    IJ.log("rTG: Iterating over the " + nTags + " tag entries in this group");
 	// Iterate over the number of Tag Entries in this group
 	for (int i = 0; i < nTags; i++) {
 	    readTagEntry();
@@ -681,7 +689,7 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	curGroupLevel -= 1;
 
 	return 1;
-    };
+    }
 
     String makeGroupString() {
 	// Produces a string which is the concatenation of the current group levels
@@ -695,13 +703,13 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
     }
 
     int readTagEntry() throws IOException {
-	int isData = f.readByte();
+	final int isData = f.readByte();
 
 	// Record that we've found a new tag at this level
 	curTagAtLevelX[curGroupLevel]++;
 
 	// Get the tag label if one exists
-	int lenTagLabel = f.readShort();
+	final int lenTagLabel = f.readShort();
 	String tagLabel;
 	if (lenTagLabel != 0) {
 	    tagLabel = readString(lenTagLabel);
@@ -711,9 +719,9 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 
 	// For debugging
 	if (debugLevel > 5) {
-	    IJ.write(curGroupLevel + "|" + makeGroupString() + ": Tag label = " + tagLabel);
+	    IJ.log(curGroupLevel + "|" + makeGroupString() + ": Tag label = " + tagLabel);
 	} else if (debugLevel > 0) {
-	    IJ.write(curGroupLevel + ": Tag label = " + tagLabel);
+	    IJ.log(curGroupLevel + ": Tag label = " + tagLabel);
 	}
 
 	// Figure out if the tag was data or a new group
@@ -733,7 +741,7 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	    readTagGroup(); // which will actually increment curGroupLevel
 	}
 	return 1;
-    };
+    }
 
     String makeGroupNameString() {
 	// A utility function:
@@ -748,18 +756,19 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
     }
 
     int readTagType() throws IOException {
-	int Delim = f.readInt();
+	final int Delim = f.readInt();
 	// Should always start with %%%%
 	if (Delim != 0x25252525)
 	    throw new IOException("Tag Type delimiter not %%%%");
 
 	// This is redundant info, so just ignore it.
-	int nInTag = f.readInt();
+	@SuppressWarnings("unused")
+	final int nInTag = f.readInt();
 
 	readAnyData();
 
 	return 1;
-    };
+    }
 
     int readAnyData() throws IOException {
 	// Higher level function which dispatches to functions
@@ -767,35 +776,35 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 
 	// This specifies what kind of type we are dealing with
 	// eg short, long, struct, array etc.
-	int encodedType = f.readInt();
+	final int encodedType = f.readInt();
 
 	// Figure out the size of the encodedType
-	int etSize = encodedTypeSize(encodedType);
+	final int etSize = encodedTypeSize(encodedType);
 	if (debugLevel > 5)
-	    IJ.write("rAnD, " + hexPosition() + ": Tag Type = " + encodedType + ", Tag Size = " + etSize);
+	    IJ.log("rAnD, " + hexPosition() + ": Tag Type = " + encodedType + ", Tag Size = " + etSize);
 
 	if (etSize > 0) {
 	    // must be a regular data type, so read it and store a tag for ir
-	    storeTag(curTagName, readNativeData(encodedType, etSize));
+	    storeTag(curTagName, readNativeData(encodedType));
 	}
 	// OK then, perhaps it's an array, struct or string.
 	else if (encodedType == STRING) // String
 	{
 	    // nb readStringData will also store tags internally
-	    int stringSize = f.readInt();
+	    final int stringSize = f.readInt();
 	    readStringData(stringSize);
 	} else if (encodedType == STRUCT) // Struct
 	{
 	    // This now stores fields (in curly braces) but does not store
 	    // field names. In fact the code will be break for non-zero
 	    // field names.
-	    Vector structTypes = readStructTypes();
+	    final Vector<Integer> structTypes = readStructTypes();
 	    readStructData(structTypes);
 	} else if (encodedType == ARRAY) // Array
 	{
 	    // This only stores a tag which I defined myself
 	    // to indicate the size of data chunks that are skipped
-	    Vector arrayTypes = readArrayTypes();
+	    final Vector<Integer> arrayTypes = readArrayTypes();
 	    readArrayData(arrayTypes);
 	} else {
 	    throw new IOException("rAnD, 0x" + hexPosition() + ": Can't understand encoded type");
@@ -803,7 +812,7 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	return 1;
     }
 
-    Object readNativeData(int encodedType, int etSize) throws IOException {
+    Object readNativeData(final int encodedType) throws IOException {
 	// Does the actual reading of ordinary data types
 
 	// since it starts as an object, it is not tied to a particular
@@ -840,15 +849,15 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 
 	// Print out the value if necessary
 	if (debugLevel > 3) {
-	    IJ.write("rND, 0x" + hexPosition() + ": " + val);
+	    IJ.log("rND, 0x" + hexPosition() + ": " + val);
 	} else if (debugLevel > 0) {
-	    IJ.write("" + val);
+	    IJ.log("" + val);
 	}
 
 	return val;
     }
 
-    String readStringData(int stringSize) throws IOException {
+    String readStringData(final int stringSize) throws IOException {
 	// Does the actual reading of string data types
 	// These should be written as Unicode which can be directly
 	// converted by the String constructor
@@ -856,7 +865,7 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	    return new String("");
 
 	// Read the string data into a temporary byte buffer.
-	byte[] temp = new byte[stringSize];
+	final byte[] temp = new byte[stringSize];
 	f.read(temp, 0, stringSize);
 
 	// Now convert these unicode bytes into a real string
@@ -869,7 +878,7 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	    // Use UTF-16LE encoding (this seems to fail with MacOS 9 Java 1.1.7)
 	    try {
 		rString = new String(temp, "UTF-16LE");
-	    } catch (Exception e) {
+	    } catch (final Exception e) {
 		// Manual conversion of the string if the above fails
 		rString = "";
 		for (int i = 0; i < stringSize; i += 2) {
@@ -881,7 +890,7 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	    // use UTF-16BE encoding (this seems to fail with MacOS 9 Java 1.1.7)
 	    try {
 		rString = new String(temp, "UTF-16BE");
-	    } catch (Exception e) {
+	    } catch (final Exception e) {
 		// Manual conversion of the string if the above fails
 		rString = "";
 		for (int i = 0; i < stringSize; i += 2) {
@@ -892,7 +901,7 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	}
 
 	if (debugLevel > 0)
-	    IJ.write("StringVal: " + rString);
+	    IJ.log("StringVal: " + rString);
 
 	// Store the value of this tag
 	storeTag(curTagName, rString);
@@ -900,15 +909,15 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	return rString;
     }
 
-    Vector readArrayTypes() throws IOException {
+    Vector<Integer> readArrayTypes() throws IOException {
 	// Figures out the data types in an array data type
 	// complicated by the fact that the array type could be a struct!
 
 	// Don't know if this will behave for arrays of strings or arrays
 
-	int arrayType = f.readInt();
+	final int arrayType = f.readInt();
 
-	Vector itemTypes = new Vector();
+	Vector<Integer> itemTypes = new Vector<Integer>();
 	if (arrayType == STRUCT) { // ie a Struct
 	    itemTypes = readStructTypes();
 	} else if (arrayType == ARRAY) { // ie a sub array
@@ -923,13 +932,13 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	return itemTypes;
     }
 
-    int readArrayData(Vector arrayTypes) throws IOException {
+    int readArrayData(final Vector<Integer> arrayTypes) throws IOException {
 	// Reads in array data
 
 	// First thing to do is get number of array elements
-	int arraySize = f.readInt();
+	final int arraySize = f.readInt();
 	if (debugLevel > 3)
-	    IJ.write("rArD, 0x" + hexPosition() + ": Reading array of size = " + arraySize);
+	    IJ.log("rArD, 0x" + hexPosition() + ": Reading array of size = " + arraySize);
 
 	// Now figure out the total width of each element in the array
 	// nb these elements can have subelements if the array is an array
@@ -941,28 +950,29 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	int encodedType = 0;
 	for (int i = 0; i < arrayTypes.size(); i++) {
 	    // cast the ith Vector element to Integer and then get a regular int
-	    encodedType = ((Integer) arrayTypes.elementAt(i)).intValue();
-	    int etSize = encodedTypeSize(encodedType);
+	    encodedType = arrayTypes.elementAt(i).intValue();
+	    final int etSize = encodedTypeSize(encodedType);
 	    // Now add that size to our running total
 	    itemSize += etSize;
 	    // For debugging
 	    if (debugLevel > 5)
-		IJ.write("rArD: Tag Type = " + encodedType + ", Tag Size = " + etSize);
+		IJ.log("rArD: Tag Type = " + encodedType + ", Tag Size = " + etSize);
 	    // readNativeData(encodedType,etSize);
 	}
 	if (debugLevel > 5)
-	    IJ.write("rArD: Array Item Size = " + itemSize);
+	    IJ.log("rArD: Array Item Size = " + itemSize);
 
 	// OK now figure out what to do with this array
 	// this would be the buffer size needed to accommodate ot
-	long bufSize = (long) arraySize * (long) itemSize;
+	final long bufSize = (long) arraySize * (long) itemSize;
 
 	// If this isn't image data but is an unsigned short array
 	// of less than 256 bytes then it is probably a string
 	if (!curTagName.endsWith("ImageData.Data") && arrayTypes.size() == 1 && encodedType == USHORT
 		&& arraySize < 256) {
 	    // read in as string
-	    String val = readStringData((int) bufSize);
+	    @SuppressWarnings("unused")
+	    final String val = readStringData((int) bufSize);
 	} else { // treat as binary data
 		 // Make up my own tags to indicate data size
 	    storeTag(curTagName + ".Size", new Long(bufSize));
@@ -980,28 +990,28 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	return 1;
     }
 
-    Vector readStructTypes() throws IOException {
+    Vector<Integer> readStructTypes() throws IOException {
 	// Figures out the data types in a struct
 	if (debugLevel > 3)
-	    IJ.write("Reading Struct Types at Pos = " + f.getFilePointer() + ", 0x" + hexPosition());
+	    IJ.log("Reading Struct Types at Pos = " + f.getFilePointer() + ", 0x" + hexPosition());
 
-	// nb GatanDM3 has longs - I think C++ long = 4 bytes, so use Java int
-	int structNameLength = f.readInt();
-	int nFields = f.readInt();
+	@SuppressWarnings("unused")
+	final int structNameLength = f.readInt();
+	final int nFields = f.readInt();
 
 	if (debugLevel > 5)
-	    IJ.write("nFields = " + nFields);
+	    IJ.log("nFields = " + nFields);
 
 	if (nFields > 100)
 	    throw new IOException("Too many fields");
 
-	Vector fieldTypes = new Vector();
+	final Vector<Integer> fieldTypes = new Vector<Integer>();
 	int nameLength = 0;
 	for (int i = 0; i < nFields; i++) {
 	    nameLength = f.readInt();
 	    if (debugLevel > 10)
-		IJ.write(i + "th namelength = " + nameLength);
-	    int fieldType = f.readInt();
+		IJ.log(i + "th namelength = " + nameLength);
+	    final int fieldType = f.readInt();
 
 	    // add changed to addElement for Java 1.1.7 compatibility
 	    fieldTypes.addElement(new Integer(fieldType));
@@ -1010,21 +1020,21 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	return fieldTypes;
     }
 
-    int readStructData(Vector structTypes) throws IOException {
+    int readStructData(final Vector<Integer> structTypes) throws IOException {
 	// Reads in struct data based on the type info in structTypes
 	String structAsString = "";
 
 	for (int i = 0; i < structTypes.size(); i++) {
-	    Integer iTagType = (Integer) structTypes.elementAt(i);
+	    final Integer iTagType = structTypes.elementAt(i);
 
-	    int encodedType = iTagType.intValue();
-	    int etSize = encodedTypeSize(encodedType);
+	    final int encodedType = iTagType.intValue();
+	    final int etSize = encodedTypeSize(encodedType);
 	    // For debugging
 	    if (debugLevel > 5)
-		IJ.write("Tag Type = " + encodedType + ", Tag Size = " + etSize);
+		IJ.log("Tag Type = " + encodedType + ", Tag Size = " + etSize);
 
 	    // OK now get the data
-	    structAsString += readNativeData(encodedType, etSize);
+	    structAsString += readNativeData(encodedType);
 	    // Add a comma to separate values unless this is the last entry
 	    if (i + 1 != structTypes.size())
 		structAsString += ",";
@@ -1033,46 +1043,46 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	return 1;
     }
 
-    int encodedTypeSize(int encodedType) {
+    int encodedTypeSize(final int encodedType) {
 	// returns the size in bytes of the data type
 	// 030614 Replaced type numbers based on GatanDM3.h
 
 	// so -1 will be the value returned for an unrecognised type
 	// (which could include ARRAYs, STRUCTs, STRINGs)
-	int width = -1;
+	int width1 = -1;
 
 	switch (encodedType) {
 	case 0: // blank field? Do I need this?
-	    width = 0;
+	    width1 = 0;
 	    break;
 
 	case BOOLEAN: // boolean: data size = 1
 	case CHAR: // char: data size = 1
 	case OCTET: // octet: data size = 1
-	    width = 1;
+	    width1 = 1;
 	    break;
 
 	case SHORT: // 1. short: data size = 2
 	case USHORT: // 3. unsigned short: data size = 2
-	    width = 2;
+	    width1 = 2;
 	    break;
 
 	case LONG: // 2. long: data size = 4
 	case ULONG: // 4. unsigned long: data size = 4
 	case FLOAT: // 5. float: data size = 4
-	    width = 4;
+	    width1 = 4;
 	    break;
 
 	case DOUBLE: // double: data size = 8
-	    width = 8;
+	    width1 = 8;
 	    break;
 	}
-	return (width);
+	return (width1);
     }
 
     // Store the value and key of the tag that we have just
     // read in a table
-    void storeTag(String tagName, Object tagValue) {
+    void storeTag(final String tagName, final Object tagValue) {
 	// add changed to addElement for Java 1.1.7 compatibility
 	storedTags.addElement(new String(tagName + " = " + tagValue));
 	tagHash.put(tagName, tagValue);
@@ -1087,8 +1097,8 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
     short blreadShort() throws IOException {
 	if (!littleEndian)
 	    return f.readShort();
-	byte b1 = f.readByte();
-	byte b2 = f.readByte();
+	final byte b1 = f.readByte();
+	final byte b2 = f.readByte();
 	return ((short) (((b2 & 0xff) << 8) | (b1 & 0xff)));
     }
 
@@ -1102,18 +1112,18 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
     {
 	if (!littleEndian)
 	    return (short) f.readUnsignedShort();
-	byte b1 = f.readByte();
-	byte b2 = f.readByte();
+	final byte b1 = f.readByte();
+	final byte b2 = f.readByte();
 	return ((short) (((b2 & 0xff) << 8) | (b1 & 0xff)));
     }
 
     int blreadInt() throws IOException {
 	if (!littleEndian)
 	    return f.readInt();
-	byte b1 = f.readByte();
-	byte b2 = f.readByte();
-	byte b3 = f.readByte();
-	byte b4 = f.readByte();
+	final byte b1 = f.readByte();
+	final byte b2 = f.readByte();
+	final byte b3 = f.readByte();
+	final byte b4 = f.readByte();
 	return ((((b4 & 0xff) << 24) | ((b3 & 0xff) << 16) | ((b2 & 0xff) << 8) | (b1 & 0xff)));
     }
 
@@ -1123,12 +1133,12 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
     {
 	if (!littleEndian)
 	    return f.readLong();
-	int i1 = blreadInt();
-	int i2 = blreadInt();
+	final int i1 = blreadInt();
+	final int i2 = blreadInt();
 
 	// need to convert intermediates to long explicitly since the standard
 	// is presumably just to work with them as int
-	return (((long) (i2 & 0xffffffff) << 32) | (long) (i1 & 0xffffffff));
+	return (((long) (i2 & 0xffffffff) << 32) | i1 & 0xffffffff);
 
     }
 
@@ -1138,7 +1148,7 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	if (!littleEndian)
 	    return f.readDouble();
 
-	long orig = blreadLong();
+	final long orig = blreadLong();
 	return (Double.longBitsToDouble(orig));
     }
 
@@ -1146,18 +1156,18 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	if (!littleEndian)
 	    return f.readFloat();
 
-	int orig = blreadInt();
+	final int orig = blreadInt();
 	return (Float.intBitsToFloat(orig));
     }
 
     // used to read in field labels
-    String readString(int n) throws IOException {
+    String readString(final int n) throws IOException {
 	// not sure if this readString limit is sensible or necessary
 	if (n > 2000)
 	    throw new IOException("Can't handle strings longer than 2000 chars, n = " + n + " at pos = "
 		    + f.getFilePointer());
 
-	byte[] temp = new byte[n];
+	final byte[] temp = new byte[n];
 	f.read(temp, 0, n);
 
 	return new String(temp);
@@ -1167,6 +1177,33 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
     String hexPosition() throws IOException {
 	// Utility fn to return current file position in hex
 	return (Long.toHexString(f.getFilePointer()));
+    }
+
+    /**
+     * <p>
+     * This main method is used for testing. It starts ImageJ, loads a test image and starts the plugin.
+     * </p>
+     * <p>
+     * User interaction is necessary, as the plugin uses a GUI.
+     * </p>
+     * <p>
+     * <a href= 'https://github.com/imagej/minimal-ij1-plugin/blob/master/src/main/java/Process_Pixe l s . j a v a ' > s
+     * e e minimal-ij1-plugin on GitHub</a>
+     * </p>
+     *
+     * @param args
+     */
+    public static void main(final String[] args) {
+	/*
+	 * start ImageJ
+	 */
+	new ImageJ();
+
+	/*
+	 * run the plugin
+	 */
+	final Class<?> clazz = CSI_DM3_Reader.class;
+	IJ.runPlugIn(clazz.getName(), "");
     }
 
 }

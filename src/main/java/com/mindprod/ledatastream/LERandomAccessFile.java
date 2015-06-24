@@ -33,13 +33,6 @@ import java.io.RandomAccessFile;
  * @since 1998
  */
 public final class LERandomAccessFile implements DataInput, DataOutput {
-    private static final int FIRST_COPYRIGHT_YEAR = 1999;
-    /**
-     * undisplayed copyright notice.
-     *
-     * @noinspection UnusedDeclaration
-     */
-    private static final String EMBEDDED_COPYRIGHT = "Copyright: (c) 1999-2015 Roedy Green, Canadian Mind Products, http://mindprod.com";
     /**
      * to get at the big-endian methods of RandomAccessFile .
      *
@@ -66,7 +59,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws java.io.FileNotFoundException
      *             if open fails.
      */
-    public LERandomAccessFile(File file, String rw) throws FileNotFoundException {
+    public LERandomAccessFile(final File file, final String rw) throws FileNotFoundException {
 	raf = new RandomAccessFile(file, rw);
 	work = new byte[8];
     }
@@ -83,7 +76,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      *             if open fails.
      * @noinspection SameParameterValue
      */
-    public LERandomAccessFile(String file, String rw) throws FileNotFoundException {
+    public LERandomAccessFile(final String file, final String rw) throws FileNotFoundException {
 	raf = new RandomAccessFile(file, rw);
 	work = new byte[8];
     }
@@ -152,7 +145,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
-    public final int read(byte ba[]) throws IOException {
+    public final int read(final byte ba[]) throws IOException {
 	return raf.read(ba);
     }
 
@@ -170,7 +163,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
-    public final int read(byte ba[], int off, int len) throws IOException {
+    public final int read(final byte ba[], final int off, final int len) throws IOException {
 	return raf.read(ba, off, len);
     }
 
@@ -181,6 +174,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final boolean readBoolean() throws IOException {
 	return raf.readBoolean();
     }
@@ -192,6 +186,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final byte readByte() throws IOException {
 	return raf.readByte();
     }
@@ -203,6 +198,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final char readChar() throws IOException {
 	raf.readFully(work, 0, 2);
 	return (char) ((work[1] & 0xff) << 8 | (work[0] & 0xff));
@@ -215,6 +211,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final double readDouble() throws IOException {
 	return Double.longBitsToDouble(readLong());
     }
@@ -226,6 +223,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final float readFloat() throws IOException {
 	return Float.intBitsToFloat(readInt());
     }
@@ -239,7 +237,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
-    public final void readFully(byte ba[]) throws IOException {
+    @Override
+    public final void readFully(final byte ba[]) throws IOException {
 	raf.readFully(ba, 0, ba.length);
     }
 
@@ -256,7 +255,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
-    public final void readFully(byte ba[], int off, int len) throws IOException {
+    @Override
+    public final void readFully(final byte ba[], final int off, final int len) throws IOException {
 	raf.readFully(ba, off, len);
     }
 
@@ -268,6 +268,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      *             if read fails.
      * @see java.io.RandomAccessFile#readInt except little endian.
      */
+    @Override
     public final int readInt() throws IOException {
 	raf.readFully(work, 0, 4);
 	return (work[3]) << 24 | (work[2] & 0xff) << 16 | (work[1] & 0xff) << 8 | (work[0] & 0xff);
@@ -280,6 +281,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final String readLine() throws IOException {
 	return raf.readLine();
     }
@@ -291,13 +293,14 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final long readLong() throws IOException {
 	raf.readFully(work, 0, 8);
 	return (long) (work[7]) << 56 |
 	/* long cast necessary or shift done modulo 32 */
 	(long) (work[6] & 0xff) << 48 | (long) (work[5] & 0xff) << 40 | (long) (work[4] & 0xff) << 32
 		| (long) (work[3] & 0xff) << 24 | (long) (work[2] & 0xff) << 16 | (long) (work[1] & 0xff) << 8
-		| (long) (work[0] & 0xff);
+		| work[0] & 0xff;
     }
 
     /**
@@ -307,6 +310,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final short readShort() throws IOException {
 	raf.readFully(work, 0, 2);
 	return (short) ((work[1] & 0xff) << 8 | (work[0] & 0xff));
@@ -319,6 +323,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final String readUTF() throws IOException {
 	return raf.readUTF();
     }
@@ -330,6 +335,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final int readUnsignedByte() throws IOException {
 	return raf.readUnsignedByte();
     }
@@ -342,6 +348,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final int readUnsignedShort() throws IOException {
 	raf.readFully(work, 0, 2);
 	return ((work[1] & 0xff) << 8 | (work[0] & 0xff));
@@ -357,7 +364,7 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      *             if read fails.
      * @noinspection SameParameterValue
      */
-    public final void seek(long pos) throws IOException {
+    public final void seek(final long pos) throws IOException {
 	raf.seek(pos);
     }
 
@@ -371,7 +378,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
-    public final int skipBytes(int n) throws IOException {
+    @Override
+    public final int skipBytes(final int n) throws IOException {
 	return raf.skipBytes(n);
     }
 
@@ -384,7 +392,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
-    public final synchronized void write(int ib) throws IOException {
+    @Override
+    public final synchronized void write(final int ib) throws IOException {
 	raf.write(ib);
     }
 
@@ -398,7 +407,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      *             if read fails.
      * @see java.io.DataOutput#write(byte[])
      */
-    public final void write(byte ba[]) throws IOException {
+    @Override
+    public final void write(final byte ba[]) throws IOException {
 	raf.write(ba, 0, ba.length);
     }
 
@@ -416,7 +426,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      *             if read fails.
      * @see java.io.DataOutput#write(byte[], int, int)
      */
-    public final synchronized void write(byte ba[], int off, int len) throws IOException {
+    @Override
+    public final synchronized void write(final byte ba[], final int off, final int len) throws IOException {
 	raf.write(ba, off, len);
     }
 
@@ -430,7 +441,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      *             if read fails.
      * @see java.io.DataOutput#writeBoolean(boolean)
      */
-    public final void writeBoolean(boolean v) throws IOException {
+    @Override
+    public final void writeBoolean(final boolean v) throws IOException {
 	raf.writeBoolean(v);
     }
 
@@ -444,7 +456,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      *             if read fails.
      * @see java.io.DataOutput#writeByte(int)
      */
-    public final void writeByte(int v) throws IOException {
+    @Override
+    public final void writeByte(final int v) throws IOException {
 	raf.writeByte(v);
     }
 
@@ -458,7 +471,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      *             if read fails.
      * @see java.io.DataOutput#writeBytes(java.lang.String)
      */
-    public final void writeBytes(String s) throws IOException {
+    @Override
+    public final void writeBytes(final String s) throws IOException {
 	raf.writeBytes(s);
     }
 
@@ -471,7 +485,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
-    public final void writeChar(int v) throws IOException {
+    @Override
+    public final void writeChar(final int v) throws IOException {
 	// same code as writeShort
 	work[0] = (byte) v;
 	work[1] = (byte) (v >> 8);
@@ -487,8 +502,9 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
-    public final void writeChars(String s) throws IOException {
-	int len = s.length();
+    @Override
+    public final void writeChars(final String s) throws IOException {
+	final int len = s.length();
 	for (int i = 0; i < len; i++) {
 	    writeChar(s.charAt(i));
 	}
@@ -503,7 +519,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
-    public final void writeDouble(double v) throws IOException {
+    @Override
+    public final void writeDouble(final double v) throws IOException {
 	writeLong(Double.doubleToLongBits(v));
     }
 
@@ -516,7 +533,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws java.io.IOException
      *             if read fails.
      */
-    public final void writeFloat(float v) throws IOException {
+    @Override
+    public final void writeFloat(final float v) throws IOException {
 	writeInt(Float.floatToIntBits(v));
     }
 
@@ -529,7 +547,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
-    public final void writeInt(int v) throws IOException {
+    @Override
+    public final void writeInt(final int v) throws IOException {
 	work[0] = (byte) v;
 	work[1] = (byte) (v >> 8);
 	work[2] = (byte) (v >> 16);
@@ -547,7 +566,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      *             if read fails.
      * @see java.io.RandomAccessFile#writeLong
      */
-    public final void writeLong(long v) throws IOException {
+    @Override
+    public final void writeLong(final long v) throws IOException {
 	work[0] = (byte) v;
 	work[1] = (byte) (v >> 8);
 	work[2] = (byte) (v >> 16);
@@ -569,7 +589,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      * @throws IOException
      *             if read fails.
      */
-    public final void writeShort(int v) throws IOException {
+    @Override
+    public final void writeShort(final int v) throws IOException {
 	work[0] = (byte) v;
 	work[1] = (byte) (v >> 8);
 	raf.write(work, 0, 2);
@@ -585,7 +606,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
      *             if read fails.
      * @see java.io.DataOutput#writeUTF(java.lang.String)
      */
-    public final void writeUTF(String s) throws IOException {
+    @Override
+    public final void writeUTF(final String s) throws IOException {
 	raf.writeUTF(s);
     }
 }

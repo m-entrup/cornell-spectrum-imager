@@ -25,11 +25,12 @@
  */
 package com.mindprod.ledatastream;
 
+import static java.lang.System.out;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import static java.lang.System.*;
 
 /**
  * Tests Little Endian LEDataInputStream and LEDataOutputStream.
@@ -48,18 +49,18 @@ public final class LETest {
      * @param args
      *            not used
      */
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
 	// Write little-endian binary data into a sequential file
 	// O P E N
 	FileOutputStream fos;
 	try {
 	    fos = new FileOutputStream("C:/temp/temp.dat", false
 	    /* append */);
-	} catch (IOException e) {
+	} catch (final IOException e) {
 	    out.println("Unexpected IOException opening LEDataOutputStream");
 	    return;
 	}
-	LEDataOutputStream ledos = new LEDataOutputStream(fos);
+	final LEDataOutputStream ledos = new LEDataOutputStream(fos);
 	// W R I T E
 	try {
 	    ledos.writeByte((byte) 44);
@@ -75,14 +76,14 @@ public final class LETest {
 	    ledos.writeUTF("echidna");
 	    ledos.writeBytes("kangaroo"/* string -> LSB 8-bit */);
 	    ledos.writeChars("dingo"/* string 16-bit Unicode */);
-	} catch (IOException e) {
+	} catch (final IOException e) {
 	    out.println("Unexpected IOException writing LEDataOutputStream");
 	    return;
 	}
 	// C L O S E
 	try {
 	    ledos.close();
-	} catch (IOException e) {
+	} catch (final IOException e) {
 	    out.println("Unexpected IOException closing LEDataOutputStream");
 	    return;
 	}
@@ -92,36 +93,36 @@ public final class LETest {
 	FileInputStream fis;
 	try {
 	    fis = new FileInputStream("C:/temp/temp.dat");
-	} catch (FileNotFoundException e) {
+	} catch (final FileNotFoundException e) {
 	    out.println("Unexpected IOException opening LEDataInputStream");
 	    return;
 	}
-	LEDataInputStream ledis = new LEDataInputStream(fis);
+	final LEDataInputStream ledis = new LEDataInputStream(fis);
 	// R E A D
 	try {
-	    byte b = ledis.readByte();
+	    final byte b = ledis.readByte();
 	    out.println(b);
-	    byte ub = (byte) ledis.readUnsignedByte();
+	    final byte ub = (byte) ledis.readUnsignedByte();
 	    out.println(ub);
 	    char c = ledis.readChar();
 	    out.println(c);
-	    int j = ledis.readInt();
+	    final int j = ledis.readInt();
 	    out.println(j);
-	    long l = ledis.readLong();
+	    final long l = ledis.readLong();
 	    out.println(l);
-	    short ii = ledis.readShort();
+	    final short ii = ledis.readShort();
 	    out.println(ii);
-	    short us = (short) ledis.readUnsignedShort();
+	    final short us = (short) ledis.readUnsignedShort();
 	    out.println(us);
-	    boolean q = ledis.readBoolean();
+	    final boolean q = ledis.readBoolean();
 	    out.println(q);
-	    double d = ledis.readDouble();
+	    final double d = ledis.readDouble();
 	    out.println(d);
-	    float f = ledis.readFloat();
+	    final float f = ledis.readFloat();
 	    out.println(f);
-	    String u = ledis.readUTF();
+	    final String u = ledis.readUTF();
 	    out.println(u);
-	    byte[] ba = new byte[8];
+	    final byte[] ba = new byte[8];
 	    ledis.readFully(ba, 0/* offset in ba */, ba.length/*
 							       * bytes to read
 							       */);
@@ -137,14 +138,14 @@ public final class LETest {
 	    out.print(c);
 	    c = ledis.readChar();
 	    out.println(c);
-	} catch (IOException e) {
+	} catch (final IOException e) {
 	    out.println("Unexpected IOException reading LEDataInputStream");
 	    return;
 	}
 	// C L O S E
 	try {
 	    ledis.close();
-	} catch (IOException e) {
+	} catch (final IOException e) {
 	    out.println("Unexpected IOException closing LEDataInputStream");
 	    return;
 	}
@@ -154,7 +155,7 @@ public final class LETest {
 	try {
 	    leraf = new LERandomAccessFile("C:/temp/rand.dat", "rw"
 	    /* read/write */);
-	} catch (IOException e) {
+	} catch (final IOException e) {
 	    out.println("Unexpected IOException creating LERandomAccessFile");
 	    return;
 	}
@@ -175,35 +176,35 @@ public final class LETest {
 	    leraf.writeBytes("kangaroo"/* string -> LSB 8-bit */);
 	    leraf.writeChars("dingo"/* string 16-bit Unicode */);
 	    leraf.seek(0/* byte offset in file */);
-	} catch (IOException e) {
+	} catch (final IOException e) {
 	    out.println("Unexpected IOException writing LERandomAccessFile");
 	    return;
 	}
 	try {
 	    // R E A D
-	    byte b = leraf.readByte();
+	    final byte b = leraf.readByte();
 	    out.println(b);
-	    byte ub = (byte) leraf.readUnsignedByte();
+	    final byte ub = (byte) leraf.readUnsignedByte();
 	    out.println(ub);
 	    char c = leraf.readChar();
 	    out.println(c);
-	    int j = leraf.readInt();
+	    final int j = leraf.readInt();
 	    out.println(j);
-	    long l = leraf.readLong();
+	    final long l = leraf.readLong();
 	    out.println(l);
-	    short ss = leraf.readShort();
+	    final short ss = leraf.readShort();
 	    out.println(ss);
-	    short us = (short) leraf.readUnsignedShort();
+	    final short us = (short) leraf.readUnsignedShort();
 	    out.println(us);
-	    boolean q = leraf.readBoolean();
+	    final boolean q = leraf.readBoolean();
 	    out.println(q);
-	    double d = leraf.readDouble();
+	    final double d = leraf.readDouble();
 	    out.println(d);
-	    float f = leraf.readFloat();
+	    final float f = leraf.readFloat();
 	    out.println(f);
-	    String u = leraf.readUTF();
+	    final String u = leraf.readUTF();
 	    out.println(u);
-	    byte[] ba = new byte[8];
+	    final byte[] ba = new byte[8];
 	    leraf.readFully(ba, 0/* offset in ba */, ba.length/*
 							       * bytes to read
 							       */);
@@ -219,14 +220,14 @@ public final class LETest {
 	    out.print(c);
 	    c = leraf.readChar();
 	    out.println(c);
-	} catch (IOException e) {
+	} catch (final IOException e) {
 	    out.println("Unexpected IOException reading LERandomAccessFile");
 	    return;
 	}
 	// C L O S E
 	try {
 	    leraf.close();
-	} catch (IOException e) {
+	} catch (final IOException e) {
 	    out.println("Unexpected IOException closing LERandomAccessFile");
 	}
     } // end main

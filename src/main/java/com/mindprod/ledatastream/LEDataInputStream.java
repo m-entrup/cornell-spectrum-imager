@@ -34,13 +34,6 @@ import java.io.InputStream;
  * @since 1998
  */
 public final class LEDataInputStream implements DataInput {
-    private static final int FIRST_COPYRIGHT_YEAR = 1999;
-    /**
-     * undisplayed copyright notice.
-     *
-     * @noinspection UnusedDeclaration
-     */
-    private static final String EMBEDDED_COPYRIGHT = "Copyright: (c) 1999-2015 Roedy Green, Canadian Mind Products, http://mindprod.com";
     /**
      * to get at the big-Endian methods of a basic DataInputStream
      *
@@ -66,7 +59,7 @@ public final class LEDataInputStream implements DataInput {
      * @param in
      *            binary inputstream of little-endian data.
      */
-    public LEDataInputStream(InputStream in) {
+    public LEDataInputStream(final InputStream in) {
 	this.is = in;
 	this.dis = new DataInputStream(in);
 	work = new byte[8];
@@ -82,7 +75,7 @@ public final class LEDataInputStream implements DataInput {
      * @throws IOException
      *             if read fails.
      */
-    public static String readUTF(DataInput in) throws IOException {
+    public static String readUTF(final DataInput in) throws IOException {
 	return DataInputStream.readUTF(in);
     }
 
@@ -110,7 +103,7 @@ public final class LEDataInputStream implements DataInput {
      * @throws IOException
      *             if read fails.
      */
-    public final int read(byte ba[], int off, int len) throws IOException {
+    public final int read(final byte ba[], final int off, final int len) throws IOException {
 	// For efficiency, we avoid one layer of wrapper
 	return is.read(ba, off, len);
     }
@@ -123,6 +116,7 @@ public final class LEDataInputStream implements DataInput {
      *             if read fails.
      * @see java.io.DataInput#readBoolean()
      */
+    @Override
     public final boolean readBoolean() throws IOException {
 	return dis.readBoolean();
     }
@@ -135,6 +129,7 @@ public final class LEDataInputStream implements DataInput {
      *             if read fails.
      * @see java.io.DataInput#readByte()
      */
+    @Override
     public final byte readByte() throws IOException {
 	return dis.readByte();
     }
@@ -146,6 +141,7 @@ public final class LEDataInputStream implements DataInput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final char readChar() throws IOException {
 	dis.readFully(work, 0, 2);
 	return (char) ((work[1] & 0xff) << 8 | (work[0] & 0xff));
@@ -157,6 +153,7 @@ public final class LEDataInputStream implements DataInput {
      * @return little endian IEEE double from the datastream.
      * @throws IOException
      */
+    @Override
     public final double readDouble() throws IOException {
 	return Double.longBitsToDouble(readLong());
     }
@@ -168,6 +165,7 @@ public final class LEDataInputStream implements DataInput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final float readFloat() throws IOException {
 	return Float.intBitsToFloat(readInt());
     }
@@ -177,7 +175,8 @@ public final class LEDataInputStream implements DataInput {
      *
      * @see java.io.DataInput#readFully(byte[])
      */
-    public final void readFully(byte ba[]) throws IOException {
+    @Override
+    public final void readFully(final byte ba[]) throws IOException {
 	dis.readFully(ba, 0, ba.length);
     }
 
@@ -188,7 +187,8 @@ public final class LEDataInputStream implements DataInput {
      *             if read fails.
      * @see java.io.DataInput#readFully(byte[], int, int)
      */
-    public final void readFully(byte ba[], int off, int len) throws IOException {
+    @Override
+    public final void readFully(final byte ba[], final int off, final int len) throws IOException {
 	dis.readFully(ba, off, len);
     }
 
@@ -199,6 +199,7 @@ public final class LEDataInputStream implements DataInput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final int readInt() throws IOException {
 	dis.readFully(work, 0, 4);
 	return (work[3]) << 24 | (work[2] & 0xff) << 16 | (work[1] & 0xff) << 8 | (work[0] & 0xff);
@@ -213,6 +214,8 @@ public final class LEDataInputStream implements DataInput {
      * @deprecated This method does not properly convert bytes to characters. Use a Reader instead with a little-endian
      *             encoding.
      */
+    @Deprecated
+    @Override
     public final String readLine() throws IOException {
 	return dis.readLine();
     }
@@ -223,13 +226,14 @@ public final class LEDataInputStream implements DataInput {
      * @return little-endian binary long from the datastream.
      * @throws IOException
      */
+    @Override
     public final long readLong() throws IOException {
 	dis.readFully(work, 0, 8);
 	return (long) (work[7]) << 56 |
 	/* long cast needed or shift done modulo 32 */
 	(long) (work[6] & 0xff) << 48 | (long) (work[5] & 0xff) << 40 | (long) (work[4] & 0xff) << 32
 		| (long) (work[3] & 0xff) << 24 | (long) (work[2] & 0xff) << 16 | (long) (work[1] & 0xff) << 8
-		| (long) (work[0] & 0xff);
+		| work[0] & 0xff;
     }
 
     /**
@@ -239,6 +243,7 @@ public final class LEDataInputStream implements DataInput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final short readShort() throws IOException {
 	dis.readFully(work, 0, 2);
 	return (short) ((work[1] & 0xff) << 8 | (work[0] & 0xff));
@@ -249,6 +254,7 @@ public final class LEDataInputStream implements DataInput {
      *
      * @return String read.
      */
+    @Override
     public final String readUTF() throws IOException {
 	return dis.readUTF();
     }
@@ -260,6 +266,7 @@ public final class LEDataInputStream implements DataInput {
      *             if read fails.
      * @see java.io.DataInput#readUnsignedByte()
      */
+    @Override
     public final int readUnsignedByte() throws IOException {
 	return dis.readUnsignedByte();
     }
@@ -272,6 +279,7 @@ public final class LEDataInputStream implements DataInput {
      * @throws IOException
      *             if read fails.
      */
+    @Override
     public final int readUnsignedShort() throws IOException {
 	dis.readFully(work, 0, 2);
 	return ((work[1] & 0xff) << 8 | (work[0] & 0xff));
@@ -290,7 +298,8 @@ public final class LEDataInputStream implements DataInput {
      * @throws IOException
      *             if an I/O error occurs.
      */
-    public final int skipBytes(int n) throws IOException {
+    @Override
+    public final int skipBytes(final int n) throws IOException {
 	return dis.skipBytes(n);
     }
 }

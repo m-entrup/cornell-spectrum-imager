@@ -10,7 +10,7 @@ package edu.cornell.csi;
 
  In this plugin the ledatastream class of the Canadian Mind Products company is used (please see the additinal license rule). This plugin was donated to the ImageJ community, following all license rules of the ImageJ program will be applying to the source code.
 
- The drag and drop support in ImageJ can be enabled by editing/compiling the HandleExtraFileTypes.java-file in the Input-Output folder. I added the line: if (name.endsWith(".ser")) {return tryPlugIn("TIA_Reader", path); in the tryOpen-class and recompiled it. 
+ The drag and drop support in ImageJ can be enabled by editing/compiling the HandleExtraFileTypes.java-file in the Input-Output folder. I added the line: if (name.endsWith(".ser")) {return tryPlugIn("TIA_Reader", path); in the tryOpen-class and recompiled it.
 
  * included in v1.1 CSI 032911
  */
@@ -41,26 +41,29 @@ package edu.cornell.csi;
  *   David A. Muller <david.a.muller@cornell.edu>
  *
  * ***** END LICENSE BLOCK ***** */
-import ij.plugin.PlugIn;
-import ij.io.Opener;
+import com.mindprod.ledatastream.LEDataInputStream;
+
+import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
-import java.io.*;
-import java.awt.*;
-import java.net.*;
-import ij.*;
-import ij.io.*;
-import ij.plugin.*;
-import ij.gui.*;
-import ij.process.*;
-import ij.measure.*;
-import com.mindprod.ledatastream.*;
+import ij.io.FileInfo;
+import ij.io.FileOpener;
+import ij.io.OpenDialog;
+import ij.measure.Calibration;
+import ij.plugin.PlugIn;
+import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 
 public class CSI_TIA_Reader implements PlugIn {
     ImagePlus img;
 
-    public void run(String arg) {
-	String path = getPath(arg);
+    @Override
+    public void run(final String arg) {
+	final String path = getPath(arg);
 	if (null == path) {
 	    return;
 	}
@@ -69,7 +72,7 @@ public class CSI_TIA_Reader implements PlugIn {
 	}
     }
 
-    private String getPath(String arg) {
+    private String getPath(final String arg) {
 	// if ((arg==null) || (arg.equals("")))
 	// arg = Macro.getOptions();
 
@@ -78,7 +81,7 @@ public class CSI_TIA_Reader implements PlugIn {
 		return arg;
 	    }
 	}
-	OpenDialog od = new OpenDialog("Load SER File...", arg);
+	final OpenDialog od = new OpenDialog("Load SER File...", arg);
 	String DIRECTORY = od.getDirectory();
 	if (null == DIRECTORY) {
 	    return null; // dialog was canceled
@@ -87,24 +90,22 @@ public class CSI_TIA_Reader implements PlugIn {
 	if (!DIRECTORY.endsWith("/")) {
 	    DIRECTORY += "/";
 	}
-	String FILENAME = od.getFileName();
+	final String FILENAME = od.getFileName();
 	if (null == FILENAME) {
 	    return null; // dialog was canceled
 	}
 	return DIRECTORY + FILENAME;
     }
 
-    private InputStream open(String path) throws Exception {
+    private InputStream open(final String path) throws Exception {
 	if (0 == path.indexOf("http://")) {
 	    return new java.net.URL(path).openStream();
 	}
 	return new FileInputStream(path);
     }
 
-    private boolean parse(String path) {
+    private boolean parse(final String path) {
 
-	// variables
-	int FILE_OFFSET; // number of bytes for jumping to the data
 	int NUMBER_IMAGES; // number data sets
 	int OFFSET_ARRAY_OFFSET; // Offset to the data array offset
 	int NUMBER_DIMENSIONS; // !!!
@@ -122,8 +123,8 @@ public class CSI_TIA_Reader implements PlugIn {
 
 	// reading the header and the data offset array
 	try {
-	    InputStream is = open(path);
-	    LEDataInputStream data = new LEDataInputStream(is);
+	    final InputStream is = open(path);
+	    final LEDataInputStream data = new LEDataInputStream(is);
 	    if (data.readShort() != 0x4949) {
 		IJ.error("Doesn't seem to be a SER file");
 		return false; // ByteOrder 18761=0x4949H indicates little-endian byte Ordering
@@ -172,7 +173,7 @@ public class CSI_TIA_Reader implements PlugIn {
 		count++;
 	    }
 	    data.close();
-	} catch (Exception e) {
+	} catch (final Exception e) {
 	    IJ.error("Error opening file", e.getMessage());
 	    // IJ.error("Error opening file");
 	    return false;
@@ -186,7 +187,7 @@ public class CSI_TIA_Reader implements PlugIn {
 		while (count < NUMBER_IMAGES) {
 		    if (DATA_TYPE_ID == 0x4122) {
 			if (ims == null) {
-			    ImageProcessor ip = OpenImage(path, DATA_OFFSET[count]).getProcessor();
+			    final ImageProcessor ip = OpenImage(path, DATA_OFFSET[count]).getProcessor();
 			    ims = new ImageStack(ip.getWidth(), ip.getHeight());
 			    ims.addSlice("", ip);
 			} else {
@@ -201,7 +202,7 @@ public class CSI_TIA_Reader implements PlugIn {
 		    else if (check_data_element(path, DATA_OFFSET[count])) // guessing of the DataType
 		    {
 			if (ims == null) {
-			    ImageProcessor ip = OpenImage(path, DATA_OFFSET[count]).getProcessor();
+			    final ImageProcessor ip = OpenImage(path, DATA_OFFSET[count]).getProcessor();
 			    ims = new ImageStack(ip.getWidth(), ip.getHeight());
 			    ims.addSlice("", ip);
 			} else {
@@ -219,16 +220,16 @@ public class CSI_TIA_Reader implements PlugIn {
 		}
 	    } else if (NUMBER_DIMENSIONS == 2) {
 
-		LEDataInputStream data = new LEDataInputStream(open(path));
+		final LEDataInputStream data = new LEDataInputStream(open(path));
 		data.skipBytes(DATA_OFFSET[0]); // jumping to the data element
-		double Z_OFFSET = data.readDouble(); // CalibrationOffset
-		double Z_WIDTH = data.readDouble(); // CalibrationDelta
-		int Z_ELEMENT = data.readInt(); // CalibrationElement
+		final double Z_OFFSET = data.readDouble(); // CalibrationOffset
+		final double Z_WIDTH = data.readDouble(); // CalibrationDelta
+		final int Z_ELEMENT = data.readInt(); // CalibrationElement
 		data.readShort(); // DataType
-		int Z_DEPTH = data.readInt(); // ArrayLength
+		final int Z_DEPTH = data.readInt(); // ArrayLength
 		data.close();
 
-		float[][][] spectra = new float[Z_DEPTH][DIMENSION_SIZE[0]][DIMENSION_SIZE[1]];
+		final float[][][] spectra = new float[Z_DEPTH][DIMENSION_SIZE[0]][DIMENSION_SIZE[1]];
 		for (int j = 0; j < DIMENSION_SIZE[1]; j++)
 		    for (int i = 0; i < DIMENSION_SIZE[0]; i++)
 			if (i * DIMENSION_SIZE[1] + j < NUMBER_IMAGES) {
@@ -236,14 +237,14 @@ public class CSI_TIA_Reader implements PlugIn {
 				    / (DIMENSION_SIZE[0] * DIMENSION_SIZE[1]));
 			    OpenSpectra(path, DATA_OFFSET[j * DIMENSION_SIZE[0] + i], spectra, i, j);
 			}
-		ImageStack ims = new ImageStack(DIMENSION_SIZE[0], DIMENSION_SIZE[1]);
+		final ImageStack ims = new ImageStack(DIMENSION_SIZE[0], DIMENSION_SIZE[1]);
 		for (int k = 0; k < Z_DEPTH; k++)
 		    ims.addSlice((Z_OFFSET - (Z_WIDTH * Z_ELEMENT) + (k * Z_WIDTH)) + " ev", new FloatProcessor(
 			    spectra[k]));
 
 		imp = new ImagePlus(path.substring(path.lastIndexOf("/") + 1), ims);
 
-		Calibration cal = imp.getCalibration();
+		final Calibration cal = imp.getCalibration();
 		cal.pixelDepth = Z_WIDTH;
 		cal.zOrigin = Z_ELEMENT - Z_OFFSET / Z_WIDTH;
 		if (CALIBRATION_DELTA[0] > 1) {
@@ -282,7 +283,7 @@ public class CSI_TIA_Reader implements PlugIn {
 		}
 	    } else
 		IJ.error("TIA_Reader currently doesn't support reading " + NUMBER_DIMENSIONS + " dimensional data.");
-	} catch (Exception e) {
+	} catch (final Exception e) {
 	    IJ.error("Error opening Data series", e.toString());
 	    // IJ.error("Error opening Data series");
 	    return false;
@@ -296,7 +297,7 @@ public class CSI_TIA_Reader implements PlugIn {
 	return true;
     }
 
-    private boolean check_data_element(String path, int byteoffset) throws Exception {
+    private boolean check_data_element(final String path, final int byteoffset) throws Exception {
 
 	// variables
 	double PIXEL_WIDTH; // CalibrationDeltaX
@@ -304,8 +305,8 @@ public class CSI_TIA_Reader implements PlugIn {
 	short DATA_TYPE; // DataType
 
 	// reading the header of the data elements
-	InputStream is = open(path);
-	LEDataInputStream data = new LEDataInputStream(is);
+	final InputStream is = open(path);
+	final LEDataInputStream data = new LEDataInputStream(is);
 	data.skipBytes(byteoffset); // jumping to the data element field
 	data.readDouble(); // CalibrationOffsetX
 	PIXEL_WIDTH = data.readDouble(); // CalibrationDeltaX
@@ -325,7 +326,7 @@ public class CSI_TIA_Reader implements PlugIn {
 	}
     }
 
-    private ImagePlus OpenImage(String path, int byteoffset) throws Exception {
+    private ImagePlus OpenImage(final String path, final int byteoffset) throws Exception {
 
 	// variables
 	double PIXEL_WIDTH; // CalibrationDeltaX
@@ -335,8 +336,8 @@ public class CSI_TIA_Reader implements PlugIn {
 	int IMAGE_HEIGHT; // ArraySizeY
 
 	// reading calibration values
-	InputStream is = open(path);
-	LEDataInputStream data = new LEDataInputStream(is);
+	final InputStream is = open(path);
+	final LEDataInputStream data = new LEDataInputStream(is);
 	data.skipBytes(byteoffset); // jumping to the 2D-data element field
 	data.readDouble(); // CalibrationOffsetX
 	PIXEL_WIDTH = data.readDouble(); // CalibrationDeltaX
@@ -353,10 +354,10 @@ public class CSI_TIA_Reader implements PlugIn {
 	// IJ.log ("Array-x: "+(IMAGE_WIDTH)+" / Array-y: "+(IMAGE_HEIGHT));
 
 	// opening of the image
-	FileInfo fi = new FileInfo();
-	fi.fileFormat = fi.RAW;
+	final FileInfo fi = new FileInfo();
+	fi.fileFormat = FileInfo.RAW;
 	fi.intelByteOrder = true; // little-endian byte ordering
-	int islash = path.lastIndexOf('/');
+	final int islash = path.lastIndexOf('/');
 	if (0 == path.indexOf("http://")) {
 	    fi.url = path;
 	} else {
@@ -411,10 +412,10 @@ public class CSI_TIA_Reader implements PlugIn {
 	}
 	fi.offset = byteoffset + 50;
 	fi.whiteIsZero = false;
-	FileOpener fo = new FileOpener(fi);
-	ImagePlus imp = fo.open(false);
+	final FileOpener fo = new FileOpener(fi);
+	final ImagePlus imp = fo.open(false);
 	IJ.run(imp, "Flip Vertically", "");
-	Object obinfo = imp.getProperty("Info");
+	final Object obinfo = imp.getProperty("Info");
 	if (null != obinfo) {
 	    imp.setProperty("Info", obinfo);
 	}
@@ -422,7 +423,7 @@ public class CSI_TIA_Reader implements PlugIn {
 
     }
 
-    private ImagePlus OpenSpectra(String path, int byteoffset, ImageProcessor ip) throws Exception {
+    private ImagePlus OpenSpectra(final String path, final int byteoffset, final ImageProcessor ip1) throws Exception {
 	// variables
 	double PIXEL_WIDTH; // CalibrationDelta
 	double CALIBRATION_OFFSET; // CalibrationOffset
@@ -431,9 +432,10 @@ public class CSI_TIA_Reader implements PlugIn {
 	int IMAGE_WIDTH; // ArrayLength
 	int IMAGE_HEIGHT;
 	ImagePlus imp;
+	ImageProcessor ip;
 
 	// reading the calibration data
-	LEDataInputStream data = new LEDataInputStream(open(path));
+	final LEDataInputStream data = new LEDataInputStream(open(path));
 	data.skipBytes(byteoffset); // jumping to the data element
 
 	CALIBRATION_OFFSET = data.readDouble(); // CalibrationOffset
@@ -442,12 +444,12 @@ public class CSI_TIA_Reader implements PlugIn {
 	DATA_TYPE = data.readShort(); // DataType
 	IMAGE_WIDTH = data.readInt(); // ArrayLength
 
-	if (ip == null) {
+	if (ip1 == null) {
 	    IMAGE_HEIGHT = 1;
 	    ip = new FloatProcessor(IMAGE_WIDTH, IMAGE_HEIGHT);
 	} else {
-	    ImageProcessor ipOld = ip.duplicate();
-	    IMAGE_HEIGHT = ip.getHeight() + 1;
+	    final ImageProcessor ipOld = ip1.duplicate();
+	    IMAGE_HEIGHT = ip1.getHeight() + 1;
 	    ip = ipOld.createProcessor(IMAGE_WIDTH, IMAGE_HEIGHT);
 	    ip.insert(ipOld, 0, 0);
 	}
@@ -488,7 +490,7 @@ public class CSI_TIA_Reader implements PlugIn {
 	}
 	data.close();
 	imp = new ImagePlus(path.substring(path.lastIndexOf("/") + 1), ip);
-	Calibration cal = imp.getCalibration();
+	final Calibration cal = imp.getCalibration();
 	cal.pixelDepth = PIXEL_WIDTH;
 	cal.zOrigin = CALIBRATION_ELEMENT - CALIBRATION_OFFSET / PIXEL_WIDTH;
 	return imp;
@@ -497,23 +499,25 @@ public class CSI_TIA_Reader implements PlugIn {
 
     }
 
-    private void OpenSpectra(String path, int byteoffset, float[][][] spectra, int i, int j) throws Exception {
-	// variables
-	double PIXEL_WIDTH; // CalibrationDelta
-	double CALIBRATION_OFFSET; // CalibrationOffset
-	int CALIBRATION_ELEMENT; // CalibrationElement
+    private void OpenSpectra(final String path, final int byteoffset, final float[][][] spectra, final int i,
+	    final int j) throws Exception {
 	short DATA_TYPE; // DataType
 	int DATA_DEPTH; // ArrayLength
+	@SuppressWarnings("unused")
 	int IMAGE_WIDTH = spectra[0].length;
+	@SuppressWarnings("unused")
 	int IMAGE_HEIGHT = spectra[0][0].length;
 
 	// reading the calibration data
-	LEDataInputStream data = new LEDataInputStream(open(path));
+	final LEDataInputStream data = new LEDataInputStream(open(path));
 	data.skipBytes(byteoffset); // jumping to the data element
 
-	CALIBRATION_OFFSET = data.readDouble(); // CalibrationOffset
-	PIXEL_WIDTH = data.readDouble(); // CalibrationDelta
-	CALIBRATION_ELEMENT = data.readInt(); // CalibrationElement
+	@SuppressWarnings("unused")
+	double CALIBRATION_OFFSET = data.readDouble(); // CalibrationOffset
+	@SuppressWarnings("unused")
+	double PIXEL_WIDTH = data.readDouble(); // CalibrationDelta
+	@SuppressWarnings("unused")
+	double CALIBRATION_ELEMENT = data.readInt(); // CalibrationElement
 	DATA_TYPE = data.readShort(); // DataType
 	DATA_DEPTH = data.readInt(); // ArrayLength
 

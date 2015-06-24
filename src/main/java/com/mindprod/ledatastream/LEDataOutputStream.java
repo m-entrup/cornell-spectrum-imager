@@ -42,13 +42,6 @@ import java.io.OutputStream;
  * @since 1998-01-06
  */
 public final class LEDataOutputStream implements DataOutput {
-    private static final int FIRST_COPYRIGHT_YEAR = 1999;
-    /**
-     * undisplayed copyright notice.
-     *
-     * @noinspection UnusedDeclaration
-     */
-    private static final String EMBEDDED_COPYRIGHT = "Copyright: (c) 1999-2015 Roedy Green, Canadian Mind Products, http://mindprod.com";
     /**
      * to get at big-Endian write methods of DataOutPutStream.
      *
@@ -68,7 +61,7 @@ public final class LEDataOutputStream implements DataOutput {
      * @param out
      *            the outputstream we write little endian binary data onto.
      */
-    public LEDataOutputStream(OutputStream out) {
+    public LEDataOutputStream(final OutputStream out) {
 	this.dis = new DataOutputStream(out);
 	work = new byte[8];// work array for composing output
     }
@@ -113,7 +106,8 @@ public final class LEDataOutputStream implements DataOutput {
      *             if write fails.
      * @see java.io.DataOutput#write(int)
      */
-    public final synchronized void write(int ib) throws IOException {
+    @Override
+    public final synchronized void write(final int ib) throws IOException {
 	dis.write(ib);
     }
 
@@ -124,7 +118,8 @@ public final class LEDataOutputStream implements DataOutput {
      *             if write fails.
      * @see java.io.DataOutput#write(byte[])
      */
-    public final void write(byte ba[]) throws IOException {
+    @Override
+    public final void write(final byte ba[]) throws IOException {
 	dis.write(ba, 0, ba.length);
     }
 
@@ -135,7 +130,8 @@ public final class LEDataOutputStream implements DataOutput {
      *             if write fails.
      * @see java.io.DataOutput#write(byte[], int, int)
      */
-    public final synchronized void write(byte ba[], int off, int len) throws IOException {
+    @Override
+    public final synchronized void write(final byte ba[], final int off, final int len) throws IOException {
 	dis.write(ba, off, len);
     }
 
@@ -150,7 +146,8 @@ public final class LEDataOutputStream implements DataOutput {
      * @see java.io.DataOutput#writeBoolean(boolean)
      */
     /* Only writes one byte */
-    public final void writeBoolean(boolean v) throws IOException {
+    @Override
+    public final void writeBoolean(final boolean v) throws IOException {
 	dis.writeBoolean(v);
     }
 
@@ -164,7 +161,8 @@ public final class LEDataOutputStream implements DataOutput {
      *             if write fails.
      * @see java.io.DataOutput#writeByte(int)
      */
-    public final void writeByte(int v) throws IOException {
+    @Override
+    public final void writeByte(final int v) throws IOException {
 	dis.writeByte(v);
     }
 
@@ -178,7 +176,8 @@ public final class LEDataOutputStream implements DataOutput {
      *             if write fails.
      * @see java.io.DataOutput#writeBytes(java.lang.String)
      */
-    public final void writeBytes(String s) throws IOException {
+    @Override
+    public final void writeBytes(final String s) throws IOException {
 	dis.writeBytes(s);
     }
 
@@ -191,7 +190,8 @@ public final class LEDataOutputStream implements DataOutput {
      * @throws IOException
      *             if write fails.
      */
-    public final void writeChar(int v) throws IOException {
+    @Override
+    public final void writeChar(final int v) throws IOException {
 	// same code as writeShort
 	work[0] = (byte) v;
 	work[1] = (byte) (v >> 8);
@@ -204,8 +204,9 @@ public final class LEDataOutputStream implements DataOutput {
      * @throws IOException
      *             if write fails.
      */
-    public final void writeChars(String s) throws IOException {
-	int len = s.length();
+    @Override
+    public final void writeChars(final String s) throws IOException {
+	final int len = s.length();
 	for (int i = 0; i < len; i++) {
 	    writeChar(s.charAt(i));
 	}
@@ -220,7 +221,8 @@ public final class LEDataOutputStream implements DataOutput {
      * @throws IOException
      *             if write fails.
      */
-    public final void writeDouble(double v) throws IOException {
+    @Override
+    public final void writeDouble(final double v) throws IOException {
 	writeLong(Double.doubleToLongBits(v));
     }
 
@@ -233,7 +235,8 @@ public final class LEDataOutputStream implements DataOutput {
      * @throws IOException
      *             if write fails.
      */
-    public final void writeFloat(float v) throws IOException {
+    @Override
+    public final void writeFloat(final float v) throws IOException {
 	writeInt(Float.floatToIntBits(v));
     }
 
@@ -246,7 +249,8 @@ public final class LEDataOutputStream implements DataOutput {
      * @throws IOException
      *             if write fails.
      */
-    public final void writeInt(int v) throws IOException {
+    @Override
+    public final void writeInt(final int v) throws IOException {
 	work[0] = (byte) v;
 	work[1] = (byte) (v >> 8);
 	work[2] = (byte) (v >> 16);
@@ -263,7 +267,8 @@ public final class LEDataOutputStream implements DataOutput {
      * @throws IOException
      *             if write fails.
      */
-    public final void writeLong(long v) throws IOException {
+    @Override
+    public final void writeLong(final long v) throws IOException {
 	work[0] = (byte) v;
 	work[1] = (byte) (v >> 8);
 	work[2] = (byte) (v >> 16);
@@ -284,7 +289,8 @@ public final class LEDataOutputStream implements DataOutput {
      * @throws IOException
      *             if write fails.
      */
-    public final void writeShort(int v) throws IOException {
+    @Override
+    public final void writeShort(final int v) throws IOException {
 	work[0] = (byte) v;
 	work[1] = (byte) (v >> 8);
 	dis.write(work, 0, 2);
@@ -300,7 +306,8 @@ public final class LEDataOutputStream implements DataOutput {
      *             if write fails.
      * @see java.io.DataOutput#writeUTF(java.lang.String)
      */
-    public final void writeUTF(String s) throws IOException {
+    @Override
+    public final void writeUTF(final String s) throws IOException {
 	dis.writeUTF(s);
     }
 } // end LEDataOutputStream
