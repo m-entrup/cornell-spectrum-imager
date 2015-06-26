@@ -2910,6 +2910,7 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	new ImageJ();
 
 	final ImagePlus testImage = IJ.openImage("http://imagej.nih.gov/ij/images/flybrain.zip");
+	testImage.setRoi(80, 80, 80, 80);
 	testImage.show();
 
 	/*
