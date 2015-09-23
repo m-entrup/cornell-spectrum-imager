@@ -50,7 +50,7 @@ An overview of the tool can be found in the article "The Open-Source Cornell Spe
 
 Detailed discussion of the software with particular application to EELS analysis is discussed in our manuscript:"Data Processing For Atomic Resolution EELS", Paul Cueva, Robert Hovden, Julia A. Mundy, Huolin L. Xin, David A. Muller, **Microscopy and Microanalysis 18**, 667-675 (2012). [DOI: 10.1017/S1431927612000244][DOI]
 
-ImageJ User Guide
+[ImageJ User Guide][IJ guide]
 
 Also Visit: [The Muller Group Home Page][Muller Group]
 
@@ -68,4 +68,5 @@ Also Visit: [The Muller Group Home Page][Muller Group]
 [DOI2]: https://dx.doi.org/10.1017/S1551929512000995
 [FAQ]: https://code.google.com/archive/p/cornell-spectrum-imager/wikis/FrequentlyAskedQuestions.wiki
 [papers]: https://code.google.com/archive/p/cornell-spectrum-imager/wikis/PapersUsingCSI.wiki
+[IJ guide]: http://rsb.info.nih.gov/ij/docs/guide/user-guide.pdf
 [Muller Group]: http://research.engineering.cornell.edu/muller/csi.cfm
