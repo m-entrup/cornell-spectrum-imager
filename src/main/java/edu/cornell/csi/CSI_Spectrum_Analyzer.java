@@ -120,7 +120,7 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
     JButton butIntegrate, butHCMIntegrate, butPCA, butSubtract, butCancelCalibration, butCalibrate;
     ButtonGroup bgFit;
     JRadioButton radFast, radOversampled;
-    JComboBox comFit;
+    JComboBox<String> comFit;
     JSlider sldZoom, sldOffset, sldLeft, sldWidth, sldILeft, sldIWidth, sldCLeft, sldCRight;
     Panel panButtons, panCalibrateButtons, panSliders, panCalibrateL, panCalibrateR, panOver;
     Label labIntegrate, labSubtract, labCalibrate, labEnergy1, labEnergy2, labEnergy3, labEnergy4, labHover1, labHover2;
@@ -691,7 +691,7 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	panButtons = new Panel(new GridBagLayout());
 	panButtons.addMouseListener(new TestListener());
 	final String[] fits = { "No Fit", "Constant", "Exponential", "Linear", "Power", "LCPL" };
-	comFit = new JComboBox();
+	comFit = new JComboBox<String>();
 	for (int i = 0; i < fits.length; i++)
 	    comFit.addItem(fits[i]);
 	state.setFit(SpectrumData.NO_FIT);
