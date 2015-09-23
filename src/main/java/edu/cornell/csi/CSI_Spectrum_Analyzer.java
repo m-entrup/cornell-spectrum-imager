@@ -2913,8 +2913,8 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
      * User interaction is necessary, as the plugin uses a GUI.
      * </p>
      * <p>
-     * <a href= 'https://github.com/imagej/minimal-ij1-plugin/blob/master/src/main/java/Process_Pixe l s . j a v a ' > s
-     * e e minimal-ij1-plugin on GitHub</a> </p>
+     * <a href='https://github.com/imagej/minimal-ij1-plugin/blob/master/src/main/java/Process_Pixels.java'> see
+     * minimal-ij1-plugin on GitHub</a> </p>
      *
      * @param args
      */
