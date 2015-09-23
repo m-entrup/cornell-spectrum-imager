@@ -1,27 +1,5 @@
 package edu.cornell.csi;
 
-import ij.IJ;
-import ij.ImageJ;
-import ij.ImageListener;
-import ij.ImagePlus;
-import ij.ImageStack;
-import ij.gui.GenericDialog;
-import ij.gui.ImageCanvas;
-import ij.gui.ImageWindow;
-import ij.gui.Plot;
-import ij.gui.PlotWindow;
-import ij.gui.ProfilePlot;
-import ij.gui.Roi;
-import ij.measure.Calibration;
-import ij.measure.Measurements;
-import ij.plugin.ZProjector;
-import ij.plugin.filter.PlugInFilter;
-import ij.process.FloatProcessor;
-import ij.process.FloodFiller;
-import ij.process.ImageProcessor;
-import ij.process.ImageStatistics;
-import ij.util.Tools;
-
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Desktop;
@@ -75,6 +53,28 @@ import org.ujmp.core.Matrix; //NOTE: This plugin requires JAMA, an external Java
 import org.ujmp.core.calculation.Calculation; //NOTE: This plugin requires UJMP, another external Java Matrix Package
 import org.ujmp.jama.JamaDenseDoubleMatrix2D;
 
+import ij.IJ;
+import ij.ImageJ;
+import ij.ImageListener;
+import ij.ImagePlus;
+import ij.ImageStack;
+import ij.gui.GenericDialog;
+import ij.gui.ImageCanvas;
+import ij.gui.ImageWindow;
+import ij.gui.Plot;
+import ij.gui.PlotWindow;
+import ij.gui.ProfilePlot;
+import ij.gui.Roi;
+import ij.measure.Calibration;
+import ij.measure.Measurements;
+import ij.plugin.ZProjector;
+import ij.plugin.filter.PlugInFilter;
+import ij.process.FloatProcessor;
+import ij.process.FloodFiller;
+import ij.process.ImageProcessor;
+import ij.process.ImageStatistics;
+import ij.util.Tools;
+
 /*
  * CSI_Spectrum_Analyzer is a plugin for ImageJ to view and manipulate spectrum data.
  * Developed at Cornell University by Paul Cueva
@@ -123,8 +123,7 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
     JComboBox comFit;
     JSlider sldZoom, sldOffset, sldLeft, sldWidth, sldILeft, sldIWidth, sldCLeft, sldCRight;
     Panel panButtons, panCalibrateButtons, panSliders, panCalibrateL, panCalibrateR, panOver;
-    Label labIntegrate, labSubtract, labCalibrate, labEnergy1, labEnergy2, labEnergy3, labEnergy4, labHover1,
-	    labHover2;
+    Label labIntegrate, labSubtract, labCalibrate, labEnergy1, labEnergy2, labEnergy3, labEnergy4, labHover1, labHover2;
     TextField txtLeftCalibration, txtRightCalibration, txtEnergyCalibration, txtLeft, txtWidth, txtILeft, txtIWidth,
 	    txtOversampling;
     JMenuItem miTwoPointCalibration, miOnePointCalibration, miAbout, miDoc, miChangeColorCSI, miChangeColorCornell,
@@ -280,8 +279,7 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 		try {
 		    IJ.openImage(IJ.getDirectory("plugins") + "CSI.png").show();
 		} catch (final Exception ex) {
-		    IJ.showMessage(
-			    "About CSI: Cornell Spectrum Imager",
+		    IJ.showMessage("About CSI: Cornell Spectrum Imager",
 			    "Spectrum analyzer ImageJ plugin developed at Cornell University \n \n"
 				    + "                                  by Paul Cueva, Robert Hovden, and David A. Muller\n "
 				    + "         School of Applied and Engineering Physics, Cornell University, Ithaca, NY 14853 \n "
@@ -1323,8 +1321,8 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	    for (int p = 0; p < y.getColumnDimension(); p++) {
 		backgroundsAndEdges[p] = new Jama.Matrix(bEnd - bStart + eEnd - eStart, 1);
 		for (int e = 0; e < bEnd - bStart; e++) {
-		    backgroundsAndEdges[p]
-			    .set(e, 0, fit.getFitAtX(bcoeffs.get(0, p), bcoeffs.get(1, p), x[e + bStart]));
+		    backgroundsAndEdges[p].set(e, 0,
+			    fit.getFitAtX(bcoeffs.get(0, p), bcoeffs.get(1, p), x[e + bStart]));
 		}
 		for (int e = 0; e < eEnd - eStart; e++) {
 		    backgroundsAndEdges[p].set(e + bEnd - bStart, 0,
@@ -1333,7 +1331,8 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	    }
 	}
 
-	double[][] createFitNoG(final Jama.Matrix y, final int bStart, final int bEnd, final int eStart, final int eEnd) {
+	double[][] createFitNoG(final Jama.Matrix y, final int bStart, final int bEnd, final int eStart,
+		final int eEnd) {
 	    final int sb = bEnd - bStart;
 	    final int se = eEnd - eStart;
 	    final int col = y.getColumnDimension();
@@ -1443,8 +1442,8 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	    public void componentResized(final ComponentEvent e) {
 		plotHeight = Math.max(e.getComponent().getSize().height - marginHeight, 0);
 		plotWidth = Math.max(e.getComponent().getSize().width - marginWidth, 0);
-		IJ.run("Profile Plot Options...", "width=" + plotWidth + " height=" + plotHeight
-			+ " minimum=0 maximum=0");
+		IJ.run("Profile Plot Options...",
+			"width=" + plotWidth + " height=" + plotHeight + " minimum=0 maximum=0");
 		updateProfile();
 	    }
 
@@ -1925,9 +1924,11 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	    mf.createModelNoG(x, yMat, fitStart, fitEnd, intStart, intEnd, fit);
 
 	    // IJ.run("Convolve...",
-	    // "text1=[-1 -4 -6 -4 -1\n-4 -16 -24 -16 -4\n-5 -20 -30 -20 -5\n0 0 0 0 0\n5 20 30 20 5\n4 16 24 16 4\n1 4 6 4 1\n] normalize stack");
+	    // "text1=[-1 -4 -6 -4 -1\n-4 -16 -24 -16 -4\n-5 -20 -30 -20 -5\n0 0 0 0 0\n5 20 30 20 5\n4 16 24 16 4\n1 4
+	    // 6 4 1\n] normalize stack");
 	    // IJ.run("Convolve...",
-	    // "text1=[-1 -4 -5 0 5 4 1\n-4 -6 -20 0 20 16 4\n-6 -24 -30 0 30 24 6\n-4 -6 -20 0 20 16 4\n-1 -4 -5 0 5 4 1\n] normalize stack");
+	    // "text1=[-1 -4 -5 0 5 4 1\n-4 -6 -20 0 20 16 4\n-6 -24 -30 0 30 24 6\n-4 -6 -20 0 20 16 4\n-1 -4 -5 0 5 4
+	    // 1\n] normalize stack");
 	    stack = img1.getStack();
 	    for (int k = 0; k < size; k++) {
 		updateProgress(k * 1.0 / (2 * size) + .5);
@@ -1942,12 +1943,14 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	    coeffs = mf.createFitNoG(yMat, fitStart, fitEnd, intStart, intEnd);
 	    updateProgress(1);
 	    ipcoeff1 = new FloatProcessor(width, height, coeffs[1]);
-	    return new ImagePlus("Integrated from " + String.format("%.1f", state.x[intStart]) + " " + state.xLabel
-		    + " to " + String.format("%.1f", state.x[intEnd]) + " " + state.xLabel + " of "
-		    + String.format("%.1f", filtersize) + " oversampled background subtracted via "
-		    + comFit.getSelectedItem().toString().toLowerCase() + " fit from "
-		    + String.format("%.1f", state.x[fitStart]) + " " + state.xLabel + " to "
-		    + String.format("%.1f", state.x[fitEnd]) + " " + state.xLabel + " " + img1.getTitle(), ipcoeff1);
+	    return new ImagePlus(
+		    "Integrated from " + String.format("%.1f", state.x[intStart]) + " " + state.xLabel + " to "
+			    + String.format("%.1f", state.x[intEnd]) + " " + state.xLabel + " of "
+			    + String.format("%.1f", filtersize) + " oversampled background subtracted via "
+			    + comFit.getSelectedItem().toString().toLowerCase() + " fit from "
+			    + String.format("%.1f", state.x[fitStart]) + " " + state.xLabel + " to "
+			    + String.format("%.1f", state.x[fitEnd]) + " " + state.xLabel + " " + img1.getTitle(),
+		    ipcoeff1);
 
 	}
 
@@ -2015,8 +2018,8 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 				    - fit.getFitAtX(coeffs.get(0, height * i + j), coeffs.get(1, height * i + j), x[k]);
 			    ipsub.putPixelValue(i, j, pix);
 			    if (k > fitStart && k < fitEnd)
-				ipresidual
-					.putPixelValue(i, j, Math.exp(fit.Residual.get(k - fitStart, height * i + j)));
+				ipresidual.putPixelValue(i, j,
+					Math.exp(fit.Residual.get(k - fitStart, height * i + j)));
 			}
 		    }
 		}
@@ -2024,9 +2027,11 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	    // (new ImagePlus("Residual", stackresidual)).show();
 
 	    updateProgress(1);
-	    imgsub = new ImagePlus("Background subtracted via " + comFit.getSelectedItem().toString().toLowerCase()
-		    + " fit from " + String.format("%.1f", state.x[fitStart]) + " " + state.xLabel + " to "
-		    + String.format("%.1f", state.x[fitEnd]) + " " + state.xLabel + " " + img1.getTitle(), stacksub);
+	    imgsub = new ImagePlus(
+		    "Background subtracted via " + comFit.getSelectedItem().toString().toLowerCase() + " fit from "
+			    + String.format("%.1f", state.x[fitStart]) + " " + state.xLabel + " to "
+			    + String.format("%.1f", state.x[fitEnd]) + " " + state.xLabel + " " + img1.getTitle(),
+		    stacksub);
 	    imgsub.setCalibration(img1.getCalibration());
 	    imgsub.resetDisplayRange();
 
@@ -2043,11 +2048,13 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	    // }
 	    ImageProcessor ip;
 	    final ImageProcessor ipint = stack.getProcessor(1).createProcessor(width, height);
-	    final ImagePlus imgint = new ImagePlus("Integrated from " + String.format("%.1f", state.x[intStart]) + " "
-		    + state.xLabel + " to " + String.format("%.1f", state.x[intEnd]) + " " + state.xLabel
-		    + " of background subtracted via " + comFit.getSelectedItem().toString().toLowerCase()
-		    + " fit from " + String.format("%.1f", state.x[fitStart]) + " " + state.xLabel + " to "
-		    + String.format("%.1f", state.x[fitEnd]) + " " + state.xLabel + " " + img1.getTitle(), ipint);
+	    final ImagePlus imgint = new ImagePlus(
+		    "Integrated from " + String.format("%.1f", state.x[intStart]) + " " + state.xLabel + " to "
+			    + String.format("%.1f", state.x[intEnd]) + " " + state.xLabel
+			    + " of background subtracted via " + comFit.getSelectedItem().toString().toLowerCase()
+			    + " fit from " + String.format("%.1f", state.x[fitStart]) + " " + state.xLabel + " to "
+			    + String.format("%.1f", state.x[fitEnd]) + " " + state.xLabel + " " + img1.getTitle(),
+		    ipint);
 	    double pix, c0, c1;
 
 	    final Jama.Matrix yMat = new Jama.Matrix(size, width * height);
@@ -2092,9 +2099,10 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	    final ImageStack stack = img1.getStack();
 	    ImageProcessor ip;
 	    final ImageProcessor ipint = stack.getProcessor(1).duplicate();
-	    final ImagePlus imgint = new ImagePlus(img1.getTitle() + " HCM integrated from "
-		    + String.format("%.1f", state.x[intStart]) + " " + state.xLabel + " to "
-		    + String.format("%.1f", state.x[intEnd]) + " " + state.xLabel, ipint);
+	    final ImagePlus imgint = new ImagePlus(
+		    img1.getTitle() + " HCM integrated from " + String.format("%.1f", state.x[intStart]) + " "
+			    + state.xLabel + " to " + String.format("%.1f", state.x[intEnd]) + " " + state.xLabel,
+		    ipint);
 	    double pix, c0, c1, s, f;
 
 	    final Jama.Matrix yMat = new Jama.Matrix(size, width * height);
@@ -2187,8 +2195,9 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 		    }
 		}
 	    }
-	    pwin.setTitle("(Working: %50) [Doing Singular Value Composition: may take a few minutes.]  CSI: Cornell Spectrum Imager - "
-		    + img1.getTitle());
+	    pwin.setTitle(
+		    "(Working: %50) [Doing Singular Value Composition: may take a few minutes.]  CSI: Cornell Spectrum Imager - "
+			    + img1.getTitle());
 
 	    final long[] sizes = { yMat.getRowDimension(), yMat.getColumnDimension() };
 	    final JamaDenseDoubleMatrix2D yMatUJMP = new JamaDenseDoubleMatrix2D(sizes);
@@ -2233,7 +2242,8 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	    // IJ.error(e.toString());
 	    // }
 
-	    final Plot scree = new Plot("Scree Plot", "Principal Component Number", "log(1+c*PC Amplitude/PCmax)", n, s);
+	    final Plot scree = new Plot("Scree Plot", "Principal Component Number", "log(1+c*PC Amplitude/PCmax)", n,
+		    s);
 	    final PlotWindow screewin = scree.show();
 
 	    System.arraycopy(x, pcaStart, pcax, 0, pcaEnd - pcaStart);
@@ -2324,8 +2334,9 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 		    yMatUJMP.setAsDouble(yMatUJMP.getAsDouble(i, j) * g.getAsDouble(i, 0) * h.getAsDouble(0, j), i, j);
 		}
 	    }
-	    pwin.setTitle("(Working: %50) [Doing Singular Value Composition: may take a few minutes.]  CSI: Cornell Spectrum Imager - "
-		    + img1.getTitle());
+	    pwin.setTitle(
+		    "(Working: %50) [Doing Singular Value Composition: may take a few minutes.]  CSI: Cornell Spectrum Imager - "
+			    + img1.getTitle());
 	    if (meanCentering)
 		yMatUJMP.center(Calculation.ORIG, Matrix.ROW, true);
 	    final Matrix[] USV = yMatUJMP.svd();
@@ -2352,8 +2363,8 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 		IJ.error(e.toString());
 	    }
 
-	    final Plot scree = new Plot("Scree Plot", "Principal Component Number", "log(1+c*PC Amplitude/PCmax)", n,
-		    s, Plot.DOT);
+	    final Plot scree = new Plot("Scree Plot", "Principal Component Number", "log(1+c*PC Amplitude/PCmax)", n, s,
+		    Plot.DOT);
 	    final PlotWindow screewin = scree.show();
 
 	    System.arraycopy(x, pcaStart, pcax, 0, pcaEnd - pcaStart);
@@ -2433,8 +2444,8 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	    double pix, c0, c1;
 	    final ImagePlus imgint = new ImagePlus("Integrated from " + String.format("%.1f", state.x[intStart]) + " "
 		    + state.xLabel + " to " + String.format("%.1f", state.x[intEnd]) + " " + state.xLabel
-		    + "of background subtracted via " + comFit.getSelectedItem().toString().toLowerCase()
-		    + " fit from " + String.format("%.1f", state.x[fitStart]) + " " + state.xLabel + " to "
+		    + "of background subtracted via " + comFit.getSelectedItem().toString().toLowerCase() + " fit from "
+		    + String.format("%.1f", state.x[fitStart]) + " " + state.xLabel + " to "
 		    + String.format("%.1f", state.x[fitEnd]) + " " + state.xLabel + " " + img1.getTitle()
 		    + img1.getTitle(), ipint);
 
@@ -2472,9 +2483,10 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	    final int height = img1.getHeight();
 	    final ImageProcessor ip = img1.getProcessor();
 	    final ImageProcessor ipint = ip.resize(1, height);
-	    final ImagePlus imgint = new ImagePlus(img1.getTitle() + " HCM integrated from "
-		    + String.format("%.1f", x[intStart]) + " " + xLabel + " to " + String.format("%.1f", x[intEnd])
-		    + " " + xLabel, ipint);
+	    final ImagePlus imgint = new ImagePlus(
+		    img1.getTitle() + " HCM integrated from " + String.format("%.1f", x[intStart]) + " " + xLabel
+			    + " to " + String.format("%.1f", x[intEnd]) + " " + xLabel,
+		    ipint);
 	    double pix, c0, c1, s, f;
 
 	    final Jama.Matrix yMat = new Jama.Matrix(size, height);
@@ -2536,8 +2548,9 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 		    yMat.set(k - pcaStart, j, ip.getf(k, j) - fit.getFitAtX(c0, c1, x[k]));
 		}
 	    }
-	    pwin.setTitle("(Working: %50) [Doing Singular Value Composition: may take a few minutes.]  CSI: Cornell Spectrum Imager - "
-		    + img1.getTitle());
+	    pwin.setTitle(
+		    "(Working: %50) [Doing Singular Value Composition: may take a few minutes.]  CSI: Cornell Spectrum Imager - "
+			    + img1.getTitle());
 
 	    final long[] sizes = { yMat.getRowDimension(), yMat.getColumnDimension() };
 	    final JamaDenseDoubleMatrix2D yMatUJMP = new JamaDenseDoubleMatrix2D(sizes);
@@ -2562,7 +2575,8 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	    final Matrix V = USV[2].transpose();
 	    final Matrix U = USV[0].transpose();
 
-	    final Plot scree = new Plot("Scree Plot", "Principal Component Number", "log(1+c*PC Amplitude/PCmax)", n, s);
+	    final Plot scree = new Plot("Scree Plot", "Principal Component Number", "log(1+c*PC Amplitude/PCmax)", n,
+		    s);
 	    final PlotWindow screewin = scree.show();
 
 	    System.arraycopy(x, pcaStart, pcax, 0, pcaEnd - pcaStart);
@@ -2641,8 +2655,9 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 		    yMatUJMP.setAsDouble(yMatUJMP.getAsDouble(i, j) * g.getAsDouble(i, 0) * h.getAsDouble(0, j), i, j);
 		}
 	    }
-	    pwin.setTitle("(Working: %50) [Doing Singular Value Composition: may take a few minutes.]  CSI: Cornell Spectrum Imager - "
-		    + img1.getTitle());
+	    pwin.setTitle(
+		    "(Working: %50) [Doing Singular Value Composition: may take a few minutes.]  CSI: Cornell Spectrum Imager - "
+			    + img1.getTitle());
 
 	    if (meanCentering)
 		yMatUJMP.center(Calculation.ORIG, Matrix.ROW, true);
@@ -2674,7 +2689,8 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 		xConc[i] = i;
 	    }
 
-	    final Plot scree = new Plot("Scree Plot", "Principal Component Number", "log(1+c*PC Amplitude/PCmax)", n, s);
+	    final Plot scree = new Plot("Scree Plot", "Principal Component Number", "log(1+c*PC Amplitude/PCmax)", n,
+		    s);
 	    final PlotWindow screewin = scree.show();
 
 	    System.arraycopy(x, pcaStart, pcax, 0, pcaEnd - pcaStart);
@@ -2706,10 +2722,11 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 	    final int height = img1.getHeight();
 	    final ImageProcessor ip = img1.getProcessor();
 	    final ImageProcessor ipsub = ip.createProcessor(size, height);
-	    final ImagePlus imgsub = new ImagePlus("Background subtracted via "
-		    + comFit.getSelectedItem().toString().toLowerCase() + " fit from "
-		    + String.format("%.1f", state.x[fitStart]) + " " + state.xLabel + " to "
-		    + String.format("%.1f", state.x[fitEnd]) + " " + state.xLabel + " " + img1.getTitle(), ipsub);
+	    final ImagePlus imgsub = new ImagePlus(
+		    "Background subtracted via " + comFit.getSelectedItem().toString().toLowerCase() + " fit from "
+			    + String.format("%.1f", state.x[fitStart]) + " " + state.xLabel + " to "
+			    + String.format("%.1f", state.x[fitEnd]) + " " + state.xLabel + " " + img1.getTitle(),
+		    ipsub);
 	    double c0, c1;
 
 	    final Jama.Matrix yMat = new Jama.Matrix(size, height);
@@ -2808,8 +2825,8 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
 		    final float[] ax = { i };
 		    final float[] ay = { scree.getYValues()[i - 1] };
 		    p.addPoints(ax, ay, PlotWindow.X);
-		    p.addLabel(1.0 * i / scree.getYValues().length, .5, "" + (Math.exp(scree.getYValues()[i - 1]) - 1)
-			    * sMax / c);
+		    p.addLabel(1.0 * i / scree.getYValues().length, .5,
+			    "" + (Math.exp(scree.getYValues()[i - 1]) - 1) * sMax / c);
 		    p.setColor(Color.black);
 		    scree.drawPlot(p);
 
@@ -2897,8 +2914,7 @@ public class CSI_Spectrum_Analyzer implements PlugInFilter {
      * </p>
      * <p>
      * <a href= 'https://github.com/imagej/minimal-ij1-plugin/blob/master/src/main/java/Process_Pixe l s . j a v a ' > s
-     * e e minimal-ij1-plugin on GitHub</a>
-     * </p>
+     * e e minimal-ij1-plugin on GitHub</a> </p>
      *
      * @param args
      */

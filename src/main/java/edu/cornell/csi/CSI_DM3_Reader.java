@@ -1,5 +1,13 @@
 package edu.cornell.csi;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Vector; // for the Vector and Hashtable classes
+//import ij.IJ.*;
+
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -10,14 +18,6 @@ import ij.io.OpenDialog;
 import ij.measure.Calibration;
 import ij.plugin.PlugIn;
 import ij.process.ImageProcessor;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector; // for the Vector and Hashtable classes
-//import ij.IJ.*;
 
 // ------------------------------------------
 // CSI_DM3_Reader.java
@@ -288,7 +288,7 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	// EELS.Spectrum_Analyzer.run(imp);
     }
 
-    public ImagePlus load(final String dir, final String fileName) /* throws IOException */{
+    public ImagePlus load(final String dir, final String fileName) /* throws IOException */ {
 	String directory = dir;
 	if ((fileName == null) || (fileName == ""))
 	    return null;
@@ -360,16 +360,15 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	try {
 	    final ImageStack ims = imp.getStack();
 	    for (int i = 0; i < ims.getSize(); i++)
-		ims.setSliceLabel(
-			String.format("%.1f " + imp.getCalibration().getZUnit(), (i - imp.getCalibration().zOrigin)
-				* imp.getCalibration().pixelDepth), i + 1);
+		ims.setSliceLabel(String.format("%.1f " + imp.getCalibration().getZUnit(),
+			(i - imp.getCalibration().zOrigin) * imp.getCalibration().pixelDepth), i + 1);
 	} catch (final Exception e) {
 	    IJ.showStatus("Error Loading Image Stack");
 	}
 	// If this is a diffraction (ie reciprocal space) image then set the
 	// FHT property so that ImageJ displays inverse scale
-	final String imagingMode = (String) tagHash.get(IMGLIST + chosenImage
-		+ ".ImageTags.Microscope Info.Imaging Mode");
+	final String imagingMode = (String) tagHash
+		.get(IMGLIST + chosenImage + ".ImageTags.Microscope Info.Imaging Mode");
 	if (imagingMode != null && imagingMode.toUpperCase().equals("DIFFRACTION")) {
 	    imp.setProperty("FHT", "Dummy FHT");
 	}
@@ -580,8 +579,8 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	    break;
 
 	default:
-	    throw new IOException("Unimplemented ImageData dataType=" + dataType
-		    + " in DM3 file.  See getDM3FileInfo() for details");
+	    throw new IOException(
+		    "Unimplemented ImageData dataType=" + dataType + " in DM3 file.  See getDM3FileInfo() for details");
 	}
 
 	// Get the dimensions of the image for the chosen image
@@ -616,8 +615,8 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
 	// also will µm get corrupted? may be necessary to do a unicode comparison
 	String unit = (String) tagHash.get(IMGLIST + chosenImage + ".ImageData.Calibrations.Dimension.0.Units");
 	final String zUnit = (String) tagHash.get(IMGLIST + chosenImage + ".ImageData.Calibrations.Dimension.2.Units");
-	final String valueUnit = (String) tagHash.get(IMGLIST + chosenImage
-		+ ".ImageData.Calibrations.Brightness.Units");
+	final String valueUnit = (String) tagHash
+		.get(IMGLIST + chosenImage + ".ImageData.Calibrations.Brightness.Units");
 	if (unit == null)
 	    unit = "nm";
 
@@ -1163,8 +1162,8 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
     String readString(final int n) throws IOException {
 	// not sure if this readString limit is sensible or necessary
 	if (n > 2000)
-	    throw new IOException("Can't handle strings longer than 2000 chars, n = " + n + " at pos = "
-		    + f.getFilePointer());
+	    throw new IOException(
+		    "Can't handle strings longer than 2000 chars, n = " + n + " at pos = " + f.getFilePointer());
 
 	final byte[] temp = new byte[n];
 	f.read(temp, 0, n);
@@ -1187,8 +1186,7 @@ public class CSI_DM3_Reader extends ImagePlus implements PlugIn {
      * </p>
      * <p>
      * <a href= 'https://github.com/imagej/minimal-ij1-plugin/blob/master/src/main/java/Process_Pixe l s . j a v a ' > s
-     * e e minimal-ij1-plugin on GitHub</a>
-     * </p>
+     * e e minimal-ij1-plugin on GitHub</a> </p>
      *
      * @param args
      */

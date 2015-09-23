@@ -42,6 +42,10 @@ package edu.cornell.csi;
  * ***** END LICENSE BLOCK ***** */
 import com.mindprod.ledatastream.LEDataInputStream;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -52,10 +56,6 @@ import ij.measure.Calibration;
 import ij.plugin.PlugIn;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 
 public class CSI_TIA_Reader implements PlugIn {
     ImagePlus img;
@@ -232,14 +232,14 @@ public class CSI_TIA_Reader implements PlugIn {
 		for (int j = 0; j < DIMENSION_SIZE[1]; j++)
 		    for (int i = 0; i < DIMENSION_SIZE[0]; i++)
 			if (i * DIMENSION_SIZE[1] + j < NUMBER_IMAGES) {
-			    IJ.showProgress(1.0 * (j * DIMENSION_SIZE[0] + i + 1)
-				    / (DIMENSION_SIZE[0] * DIMENSION_SIZE[1]));
+			    IJ.showProgress(
+				    1.0 * (j * DIMENSION_SIZE[0] + i + 1) / (DIMENSION_SIZE[0] * DIMENSION_SIZE[1]));
 			    OpenSpectra(path, DATA_OFFSET[j * DIMENSION_SIZE[0] + i], spectra, i, j);
 			}
 		final ImageStack ims = new ImageStack(DIMENSION_SIZE[0], DIMENSION_SIZE[1]);
 		for (int k = 0; k < Z_DEPTH; k++)
-		    ims.addSlice((Z_OFFSET - (Z_WIDTH * Z_ELEMENT) + (k * Z_WIDTH)) + " ev", new FloatProcessor(
-			    spectra[k]));
+		    ims.addSlice((Z_OFFSET - (Z_WIDTH * Z_ELEMENT) + (k * Z_WIDTH)) + " ev",
+			    new FloatProcessor(spectra[k]));
 
 		imp = new ImagePlus(path.substring(path.lastIndexOf("/") + 1), ims);
 
@@ -349,7 +349,7 @@ public class CSI_TIA_Reader implements PlugIn {
 	IMAGE_HEIGHT = data.readInt(); // ArraySizeY
 	data.close();
 
-	// IJ.log ("Dispersion-x:  "+(PIXEL_WIDTH)+" / Dispersion-y: "+(PIXEL_HEIGHT));
+	// IJ.log ("Dispersion-x: "+(PIXEL_WIDTH)+" / Dispersion-y: "+(PIXEL_HEIGHT));
 	// IJ.log ("Array-x: "+(IMAGE_WIDTH)+" / Array-y: "+(IMAGE_HEIGHT));
 
 	// opening of the image
@@ -503,20 +503,20 @@ public class CSI_TIA_Reader implements PlugIn {
 	short DATA_TYPE; // DataType
 	int DATA_DEPTH; // ArrayLength
 	@SuppressWarnings("unused")
-	int IMAGE_WIDTH = spectra[0].length;
+	final int IMAGE_WIDTH = spectra[0].length;
 	@SuppressWarnings("unused")
-	int IMAGE_HEIGHT = spectra[0][0].length;
+	final int IMAGE_HEIGHT = spectra[0][0].length;
 
 	// reading the calibration data
 	final LEDataInputStream data = new LEDataInputStream(open(path));
 	data.skipBytes(byteoffset); // jumping to the data element
 
 	@SuppressWarnings("unused")
-	double CALIBRATION_OFFSET = data.readDouble(); // CalibrationOffset
+	final double CALIBRATION_OFFSET = data.readDouble(); // CalibrationOffset
 	@SuppressWarnings("unused")
-	double PIXEL_WIDTH = data.readDouble(); // CalibrationDelta
+	final double PIXEL_WIDTH = data.readDouble(); // CalibrationDelta
 	@SuppressWarnings("unused")
-	double CALIBRATION_ELEMENT = data.readInt(); // CalibrationElement
+	final double CALIBRATION_ELEMENT = data.readInt(); // CalibrationElement
 	DATA_TYPE = data.readShort(); // DataType
 	DATA_DEPTH = data.readInt(); // ArrayLength
 

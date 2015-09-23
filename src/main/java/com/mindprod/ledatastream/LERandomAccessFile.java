@@ -297,8 +297,8 @@ public final class LERandomAccessFile implements DataInput, DataOutput {
     public final long readLong() throws IOException {
 	raf.readFully(work, 0, 8);
 	return (long) (work[7]) << 56 |
-	/* long cast necessary or shift done modulo 32 */
-	(long) (work[6] & 0xff) << 48 | (long) (work[5] & 0xff) << 40 | (long) (work[4] & 0xff) << 32
+		/* long cast necessary or shift done modulo 32 */
+		(long) (work[6] & 0xff) << 48 | (long) (work[5] & 0xff) << 40 | (long) (work[4] & 0xff) << 32
 		| (long) (work[3] & 0xff) << 24 | (long) (work[2] & 0xff) << 16 | (long) (work[1] & 0xff) << 8
 		| work[0] & 0xff;
     }
