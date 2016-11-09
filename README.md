@@ -1,8 +1,10 @@
 # Cornell Spectrum Imager
 
-This repository contains a fork of the [original Cornell Spectrum Imager][CSI] (CSI). CSI is hosted on Goggle Code but the service is discontinued.
+This repository contains a fork of the [original Cornell Spectrum Imager][CSI] (CSI). CSI was hosted on Goggle Code but the service is discontinued.
 
 Another reason for forking CSI is to adapt it for running with [Fiji].
+
+You can find the new GitHub repository of CSI at [Hovden/cornell-spectrum-imager][CSI-GitHub].
 
 The following text has been taken from the [CSI wiki] at Google Code:
 
@@ -55,6 +57,7 @@ Detailed discussion of the software with particular application to EELS analysis
 Also Visit: [The Muller Group Home Page][Muller Group]
 
 [CSI]: https://code.google.com/archive/p/cornell-spectrum-imager/
+[CSI-GitHub]: https://github.com/Hovden/cornell-spectrum-imager
 [Fiji]: http://imagej.net/Fiji
 [CSI wiki]: https://code.google.com/archive/p/cornell-spectrum-imager/wikis/Home.wiki
 [Paul Cueva]: http://www.paulcueva.com/
